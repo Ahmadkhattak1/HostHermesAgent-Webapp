@@ -1,0 +1,181 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Host Hermes Agent" [ref=e5] [cursor=pointer]:
+          - /url: "#top"
+          - generic [ref=e7]: Host Hermes Agent
+        - generic [ref=e8]:
+          - link "Log In" [active] [ref=e9] [cursor=pointer]:
+            - /url: /signin?next=%2Fdashboard
+          - link "3-Day Trial" [ref=e10] [cursor=pointer]:
+            - /url: /signin?next=%2Fdashboard%2Fsettings%2Fsubscription%3Fnext%3D%252Fdashboard%252Fdeploy
+            - generic [ref=e11]: 3-Day Trial
+            - img [ref=e12]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - img "Hermes Agent" [ref=e18]
+            - generic [ref=e19]:
+              - paragraph [ref=e20]: Hermes Agent
+              - paragraph [ref=e21]: The self-improving AI agent built by Nous Research. The only agent with a built-in learning loop.
+          - heading "Hermes Agent Hosting" [level=1] [ref=e23]
+          - generic [ref=e24]:
+            - paragraph [ref=e25]: Deploy Hermes Agent in the cloud with fast setup and a better user experience.
+            - paragraph [ref=e26]: Run Hermes Agent in the cloud with fast setup, reliable uptime, and a cleaner experience from day one. Launch your own always-available AI agent without dealing with the usual setup friction.
+        - generic [ref=e27]:
+          - heading "A self-improving AI agent" [level=2] [ref=e28]
+          - paragraph [ref=e29]: Designed to operate autonomously, Hermes handles complex tasks by leveraging persistent memory, dynamic tool selection, and iterative self-correction. It's built for continuous execution rather than single-shot prompts.
+          - generic [ref=e30]:
+            - article [ref=e31]:
+              - img [ref=e33]
+              - generic [ref=e34]:
+                - heading "Persistent Memory" [level=3] [ref=e35]
+                - paragraph [ref=e36]: Retains context across sessions for long-running workflows.
+            - article [ref=e37]:
+              - img [ref=e39]
+              - generic [ref=e40]:
+                - heading "Task Decomposition" [level=3] [ref=e41]
+                - paragraph [ref=e42]: Breaks down high-level goals into executable steps automatically.
+            - article [ref=e43]:
+              - img [ref=e45]
+              - generic [ref=e46]:
+                - heading "Model Agnostic" [level=3] [ref=e47]
+                - paragraph [ref=e48]: Connects to various LLM backends via standardized APIs.
+        - generic [ref=e49]:
+          - paragraph [ref=e50]: Common Use Cases
+          - generic [ref=e51]:
+            - article [ref=e52]:
+              - img [ref=e54]
+              - generic [ref=e55]:
+                - heading "Research and analysis" [level=3] [ref=e56]
+                - paragraph [ref=e57]: Automate deep-dive research, synthesize documentation, and monitor industry trends autonomously.
+            - article [ref=e58]:
+              - img [ref=e60]
+              - generic [ref=e61]:
+                - heading "Recurring tasks" [level=3] [ref=e62]
+                - paragraph [ref=e63]: Schedule data extraction, report generation, and system health checks on a persistent basis.
+            - article [ref=e64]:
+              - img [ref=e66]
+              - generic [ref=e67]:
+                - heading "Team workflows" [level=3] [ref=e68]
+                - paragraph [ref=e69]: Integrate as a silent team member that responds to specific triggers in Slack or Discord.
+            - article [ref=e70]:
+              - img [ref=e72]
+              - generic [ref=e73]:
+                - heading "Technical work" [level=3] [ref=e74]
+                - paragraph [ref=e75]: Assist with code review, refactoring suggestions, and automated pull request analysis.
+        - generic [ref=e76]:
+          - paragraph [ref=e77]: What Users Are Saying
+          - generic [ref=e78]:
+            - article [ref=e79]:
+              - generic [ref=e81]:
+                - generic [ref=e82]: CB
+                - generic [ref=e83]:
+                  - heading "Chrys Bader" [level=3] [ref=e85]
+                  - paragraph [ref=e86]: "@chrysb"
+              - blockquote [ref=e87]: Hermes Agent from @NousResearch is the fastest growing agent of all time. In the past 7 days alone, Hermes gained 3x more stars than OpenClaw.
+              - generic [ref=e88]:
+                - paragraph [ref=e89]: Apr 10, 2026
+                - link "View on X" [ref=e90] [cursor=pointer]:
+                  - /url: https://x.com/chrysb/status/2042426202825375826
+            - article [ref=e91]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: AF
+                - generic [ref=e95]:
+                  - heading "Alex Finn" [level=3] [ref=e97]
+                  - paragraph [ref=e98]: "@AlexFinn"
+              - blockquote [ref=e99]: Hermes Agent is an incredible AI agent. It's better than OpenClaw in some key ways, but does it replace it?
+              - generic [ref=e100]:
+                - paragraph [ref=e101]: Apr 1, 2026
+                - link "View on X" [ref=e102] [cursor=pointer]:
+                  - /url: https://x.com/AlexFinn/status/2039364255699599867
+            - article [ref=e103]:
+              - generic [ref=e105]:
+                - generic [ref=e106]: SS
+                - generic [ref=e107]:
+                  - heading "Sudo su" [level=3] [ref=e109]
+                  - paragraph [ref=e110]: "@sudoingX"
+              - blockquote [ref=e111]: I keep coming back to Hermes Agent. Not because I have to test it, but because I want to use it. The UX is what does it.
+              - generic [ref=e112]:
+                - paragraph [ref=e113]: Mar 10, 2026
+                - link "View on X" [ref=e114] [cursor=pointer]:
+                  - /url: https://x.com/sudoingX/status/2031273045135077567
+            - article [ref=e115]:
+              - generic [ref=e117]:
+                - generic [ref=e118]: C
+                - generic [ref=e119]:
+                  - heading "Chubby" [level=3] [ref=e121]
+                  - paragraph [ref=e122]: "@kimmonismus"
+              - blockquote [ref=e123]: "Really cool: Hermes Agent powered by Gemma 4, running 100% locally and 100% free."
+              - generic [ref=e124]:
+                - paragraph [ref=e125]: Apr 2, 2026
+                - link "View on X" [ref=e126] [cursor=pointer]:
+                  - /url: https://x.com/kimmonismus/status/2039808403980345505
+        - generic [ref=e127]:
+          - heading "A simpler way to run" [level=2] [ref=e128]
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - heading "Start with a 3-day trial" [level=3] [ref=e131]
+              - paragraph [ref=e132]: Launch Hermes fast, validate the setup, then keep it running.
+            - link "Start 3-Day Trial" [ref=e133] [cursor=pointer]:
+              - /url: /signin?next=%2Fdashboard%2Fsettings%2Fsubscription%3Fnext%3D%252Fdashboard%252Fdeploy
+              - generic [ref=e134]: Start 3-Day Trial
+              - img [ref=e135]
+      - complementary [ref=e137]:
+        - generic [ref=e138]:
+          - heading "Deploy Hermes Agent" [level=2] [ref=e140]
+          - paragraph [ref=e141]:
+            - generic [ref=e142]: $19.99
+            - generic [ref=e143]: /mo
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - img [ref=e147]
+              - generic [ref=e150]: Always on
+            - generic [ref=e151]:
+              - img [ref=e153]
+              - generic [ref=e156]: Secure isolated environment
+            - generic [ref=e157]:
+              - img [ref=e159]
+              - generic [ref=e163]: One-click deployment
+            - generic [ref=e164]:
+              - img [ref=e166]
+              - generic [ref=e169]: Browser terminal access
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - paragraph [ref=e172]: Instantly connect
+              - paragraph [ref=e173]: WhatsApp, Telegram, Slack, Discord, and more.
+            - list "Supported integrations" [ref=e174]:
+              - listitem [ref=e175]:
+                - img "WhatsApp" [ref=e176]
+              - listitem [ref=e177]:
+                - img "Telegram" [ref=e178]
+              - listitem [ref=e179]:
+                - img "Slack" [ref=e180]
+              - listitem [ref=e181]:
+                - img "Discord" [ref=e182]
+              - generic [ref=e183]: + more
+          - link "Start 3-Day Trial" [ref=e184] [cursor=pointer]:
+            - /url: /signin?next=%2Fdashboard%2Fsettings%2Fsubscription%3Fnext%3D%252Fdashboard%252Fdeploy
+            - generic [ref=e185]: Start 3-Day Trial
+            - img [ref=e186]
+    - contentinfo [ref=e188]:
+      - generic [ref=e189]:
+        - paragraph [ref=e190]: © 2024 HostHermesAgent.
+        - generic [ref=e191]:
+          - link "Status" [ref=e192] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e193] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=e194] [cursor=pointer]:
+            - /url: "#"
+          - link "Twitter" [ref=e195] [cursor=pointer]:
+            - /url: "#"
+          - link "GitHub" [ref=e196] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=e202] [cursor=pointer]:
+    - img [ref=e203]
+  - alert [ref=e206]
+  - iframe [ref=e207]:
+    

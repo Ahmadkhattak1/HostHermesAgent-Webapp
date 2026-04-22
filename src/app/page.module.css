@@ -1,142 +1,894 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
+  min-height: 100vh;
+  background: #ffffff;
+}
 
-  --text-primary: #000;
-  --text-secondary: #666;
+.header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
 
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
+.headerInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 80px;
+  padding: 20px 32px;
   display: flex;
-  flex: 1;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
-}
-
-.main {
-  display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
   justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
   gap: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
+.brand {
+  display: inline-flex;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
+  gap: 14px;
+  min-width: 0;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.brandMark :global(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brandName {
+  color: var(--foreground);
+  font-size: clamp(1.05rem, 0.38vw + 1rem, 1.45rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.loginLink {
+  color: var(--foreground-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  transition: color 0.18s ease;
+}
+
+.loginLink:hover {
+  color: var(--primary);
+}
+
+.buttonPrimary,
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.14);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.buttonPrimary {
+  padding: 10px 24px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.buttonText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.buttonIcon {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.buttonPrimary:hover,
+.ctaButton:hover {
+  background: #ffffff;
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.buttonPrimary:hover .buttonIcon,
+.ctaButton:hover .buttonIcon {
+  transform: translateX(1px);
+}
+
+.buttonPrimary:active,
+.ctaButton:active {
+  background: var(--primary-dark);
+  color: #ffffff;
+  border-color: var(--primary-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(29, 78, 216, 0.22);
+  transform: translateY(0);
+}
+
+.buttonPrimary:focus-visible,
+.ctaButton:focus-visible,
+.loginLink:focus-visible,
+.footerLink:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.headerButton {
+  min-width: 136px;
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 128px 32px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 352px);
+  gap: 80px;
+  align-items: start;
+}
+
+.contentColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  padding-top: 32px;
+}
+
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 780px;
+}
+
+.heroAgentIntro {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 640px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface-soft);
+}
+
+.heroAgentIntro :global(img) {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.heroAgentCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heroAgentLabel {
+  color: var(--foreground-subtle);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.heroAgentDescription {
+  color: var(--foreground-soft);
+  font-size: 16px;
+  line-height: 24px;
   font-weight: 500;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+.heroHeadingWrap {
+  max-width: 760px;
+}
+
+.heroTitle {
+  color: var(--foreground);
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  font-weight: 800;
+}
+
+.heroCopyBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 760px;
+}
+
+.heroLead {
+  max-width: 720px;
+  color: var(--foreground-soft);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  line-height: 1.625;
+  font-weight: 500;
+}
+
+.heroDescription {
+  max-width: 738px;
+  color: var(--foreground-muted);
+  font-size: 18px;
+  line-height: 1.625;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.sectionBordered {
+  padding-top: 65px;
+  border-top: 1px solid var(--border);
+}
+
+.sectionTitle {
+  color: var(--foreground);
+  font-size: clamp(1.875rem, 3vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+.sectionCopy {
+  max-width: 738px;
+  color: var(--foreground-muted);
+  font-size: 18px;
+  line-height: 1.625;
+}
+
+.eyebrow {
+  color: var(--foreground-subtle);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.capabilityList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 656px;
+}
+
+.capabilityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.capabilityIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.capabilityCopy,
+.cardCopy,
+.ctaCopy,
+.identityText {
+  display: flex;
+  flex-direction: column;
+}
+
+.capabilityCopy {
   gap: 8px;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.capabilityCopy h3,
+.cardCopy h3,
+.ctaCopy h3,
+.identityTitle h3 {
+  color: var(--foreground);
+  font-weight: 700;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.capabilityCopy h3,
+.cardCopy h3 {
+  font-size: 20px;
+  line-height: 28px;
 }
 
-@media (max-width: 600px) {
+.capabilityCopy p,
+.cardCopy p,
+.testimonialQuote {
+  color: var(--foreground-muted);
+  font-size: 18px;
+  line-height: 1.625;
+}
+
+.useCaseGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.testimonialGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.surfaceCard,
+.testimonialCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.surfaceCard {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 294px;
+}
+
+.surfaceCardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.cardCopy {
+  gap: 12px;
+}
+
+.testimonialCard {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.testimonialCard:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.16);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.07);
+}
+
+.testimonialHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.testimonialIdentity {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.avatarCircle {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: var(--primary);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.identityText {
+  gap: 2px;
+}
+
+.identityTitle h3 {
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.identityText p,
+.testimonialDate {
+  color: var(--foreground-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.testimonialQuote {
+  color: var(--foreground);
+  border: 0;
+}
+
+.testimonialFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.testimonialLink {
+  color: var(--primary);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  transition: color 0.18s ease;
+}
+
+.testimonialLink:hover {
+  color: var(--primary-dark);
+}
+
+.testimonialLink:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.ctaPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 48px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.ctaCopy {
+  gap: 12px;
+}
+
+.ctaCopy h3 {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.ctaCopy p {
+  color: var(--foreground-muted);
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.ctaButton {
+  min-height: 60px;
+  padding: 16px 32px;
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.aside {
+  position: relative;
+  align-self: start;
+  width: clamp(280px, 27vw, 352px);
+  min-height: 1px;
+}
+
+.asideCard {
+  position: fixed;
+  top: 112px;
+  right: max(32px, calc((100vw - 1280px) / 2 + 32px));
+  width: min(calc(100vw - 64px), clamp(280px, 27vw, 352px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.asideIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.asideIntro h2 {
+  color: var(--foreground);
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.025em;
+  font-weight: 800;
+}
+
+.asideIntro p {
+  color: var(--foreground-muted);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.priceLine {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.priceValue {
+  color: var(--foreground);
+  font-size: 34px;
+  line-height: 38px;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+.priceUnit {
+  color: var(--foreground-muted);
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.asideList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.asideBenefit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--foreground);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.asideBenefitIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.asideButton {
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.asideConnectBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asideConnectCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.asideConnectEyebrow {
+  color: var(--foreground-subtle);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.asideConnectText {
+  color: var(--foreground-muted);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.asideConnectIcons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.connectIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.connectIconWrap :global(img) {
+  display: block;
+}
+
+.connectMore {
+  color: var(--foreground-soft);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.footer {
+  margin-top: 96px;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+}
+
+.footerInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.footerCopy,
+.footerLink {
+  color: var(--foreground-subtle);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.footerLink {
+  transition: color 0.18s ease;
+}
+
+.footerLink:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 1180px) {
   .main {
-    padding: 48px 24px;
+    gap: 48px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 332px);
   }
 
-  .intro {
-    gap: 16px;
+  .aside {
+    width: min(332px, calc(100vw - 64px));
   }
 
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
+  .asideCard {
+    width: min(332px, calc(100vw - 64px));
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+@media (max-width: 980px) {
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 56px;
   }
 
-  .page {
-    --background: #000;
-    --foreground: #000;
+  .contentColumn {
+    gap: 96px;
+  }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+  .aside {
+    position: static;
+    width: auto;
+  }
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .asideCard {
+    position: static;
+    top: auto;
+    right: auto;
+    width: auto;
+  }
+}
+
+@media (max-width: 800px) {
+  .headerInner,
+  .main,
+  .footerInner {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .main {
+    padding-top: 116px;
+  }
+
+  .contentColumn {
+    gap: 80px;
+    padding-top: 16px;
+  }
+
+  .heroSection {
+    gap: 32px;
+  }
+
+  .section {
+    gap: 32px;
+  }
+
+  .sectionBordered {
+    padding-top: 48px;
+  }
+
+  .useCaseGrid,
+  .testimonialGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ctaPanel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ctaButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .headerInner {
+    min-height: 72px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brandMark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .brandName {
+    font-size: 1rem;
+  }
+
+  .headerActions {
+    gap: 12px;
+  }
+
+  .loginLink {
+    display: none;
+  }
+
+  .buttonPrimary {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .headerButton {
+    min-width: 0;
+  }
+
+  .main {
+    padding-top: 104px;
+  }
+
+  .heroTitle {
+    font-size: 2.6rem;
+  }
+
+  .heroAgentIntro {
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+
+  .heroAgentIntro :global(img) {
+    width: 52px;
+    height: 52px;
+  }
+
+  .heroLead,
+  .heroDescription,
+  .sectionCopy,
+  .capabilityCopy p,
+  .cardCopy p,
+  .testimonialQuote,
+  .ctaCopy p {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .surfaceCard,
+  .testimonialCard,
+  .ctaPanel,
+  .asideCard {
+    padding: 24px;
+  }
+
+  .surfaceCard {
+    min-height: 0;
+  }
+
+  .asideBenefit {
+    align-items: flex-start;
+  }
+
+  .connectIconWrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .testimonialFooter {
+    align-items: flex-start;
+  }
+
+  .footerInner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footerLinks {
+    justify-content: flex-start;
+    gap: 18px 24px;
   }
 }

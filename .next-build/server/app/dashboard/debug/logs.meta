@@ -1,0 +1,19 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/dashboard",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/dashboard/layout,_N_T_/dashboard/debug/layout,_N_T_/dashboard/debug/logs/layout,_N_T_/dashboard/debug/logs/page,_N_T_/dashboard/debug/logs"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/dashboard/debug/logs/__PAGE__",
+    "/dashboard/debug/logs",
+    "/dashboard/debug",
+    "/dashboard",
+    "/_index",
+    "/_head"
+  ]
+}

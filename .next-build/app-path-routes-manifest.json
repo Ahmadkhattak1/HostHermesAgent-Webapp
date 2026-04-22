@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/auth/auth-code-error/page": "/auth/auth-code-error",
+  "/auth/callback/route": "/auth/callback",
+  "/dashboard/debug/logs/page": "/dashboard/debug/logs",
+  "/dashboard/deploy/page": "/dashboard/deploy",
+  "/dashboard/instances/[instanceId]/terminal/page": "/dashboard/instances/[instanceId]/terminal",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/settings/page": "/dashboard/settings",
+  "/dashboard/settings/subscription/page": "/dashboard/settings/subscription",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/",
+  "/signin/page": "/signin"
+}

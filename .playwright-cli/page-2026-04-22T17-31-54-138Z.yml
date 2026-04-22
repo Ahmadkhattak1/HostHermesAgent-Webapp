@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e9]:
+      - heading "Sign in to continue" [level=1] [ref=e21]
+      - paragraph [ref=e11]: Continue with Google to access your dashboard.
+  - button "Open Next.js Dev Tools" [ref=e17] [cursor=pointer]:
+    - img [ref=e18]
+  - alert [ref=e25]
+  - iframe [ref=e30]:
+    

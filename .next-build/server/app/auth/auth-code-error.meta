@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/auth/layout,_N_T_/auth/auth-code-error/layout,_N_T_/auth/auth-code-error/page,_N_T_/auth/auth-code-error"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/auth/auth-code-error/__PAGE__",
+    "/auth/auth-code-error",
+    "/auth",
+    "/_index",
+    "/_head"
+  ]
+}
