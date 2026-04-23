@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ProtectedRouteLink } from "@/components/protected-route-link";
+import { getAuthenticatedSession } from "@/lib/control-plane/server";
 import { buildSubscriptionPath } from "@/lib/routing";
 import styles from "./page.module.css";
 
@@ -165,7 +166,8 @@ const footerLinks = [
   { href: "#", label: "Terms" },
   { href: "https://github.com/NousResearch/hermes-agent", label: "GitHub" },
 ];
-const startTrialPath = buildSubscriptionPath("/dashboard");
+const dashboardPath = "/dashboard";
+const startTrialPath = buildSubscriptionPath(dashboardPath);
 
 const connectApps: ConnectApp[] = [
   {
@@ -352,8 +354,18 @@ function getInitials(name: string) {
     .join("");
 }
 
-export default function Home() {
+export default async function Home() {
+  const session = await getAuthenticatedSession();
+  const isSignedIn = session !== null;
   const currentYear = new Date().getFullYear();
+  const primaryCtaHref = isSignedIn ? dashboardPath : startTrialPath;
+  const headerLinkLabel = isSignedIn ? "Dashboard" : "Log In";
+  const headerButtonLabel = isSignedIn ? "Go to Dashboard" : "3-Day Trial";
+  const ctaTitle = isSignedIn ? "Pick up where you left off" : "Start with a 3-day trial";
+  const ctaDescription = isSignedIn
+    ? "Open your dashboard to manage deployments, instances, and billing."
+    : "Launch Hermes fast, validate the setup, then keep it running.";
+  const asideButtonLabel = isSignedIn ? "Go to dashboard" : "Start free";
 
   return (
     <div className={styles.page} id="top">
@@ -373,12 +385,18 @@ export default function Home() {
           </a>
 
           <div className={styles.headerActions}>
-            <ProtectedRouteLink className={styles.loginLink} href="/dashboard">
-              Log In
-            </ProtectedRouteLink>
+            {isSignedIn ? (
+              <a className={styles.loginLink} href={dashboardPath}>
+                {headerLinkLabel}
+              </a>
+            ) : (
+              <ProtectedRouteLink className={styles.loginLink} href={dashboardPath}>
+                {headerLinkLabel}
+              </ProtectedRouteLink>
+            )}
             <ActionLink
-              href={startTrialPath}
-              label="3-Day Trial"
+              href={primaryCtaHref}
+              label={headerButtonLabel}
               className={styles.headerButton}
             />
           </div>
@@ -517,12 +535,12 @@ export default function Home() {
             <h2 className={styles.sectionTitle}>A simpler way to run</h2>
             <div className={styles.ctaPanel}>
               <div className={styles.ctaCopy}>
-                <h3>Start with a 3-day trial</h3>
-                <p>Launch Hermes fast, validate the setup, then keep it running.</p>
+                <h3>{ctaTitle}</h3>
+                <p>{ctaDescription}</p>
               </div>
               <ActionLink
-                href={startTrialPath}
-                label="Start 3-Day Trial"
+                href={primaryCtaHref}
+                label={isSignedIn ? "Go to Dashboard" : "Start 3-Day Trial"}
                 className={styles.ctaButton}
               />
             </div>
@@ -584,8 +602,8 @@ export default function Home() {
             </div>
 
             <ActionLink
-              href={startTrialPath}
-              label="Start free"
+              href={primaryCtaHref}
+              label={asideButtonLabel}
               className={styles.asideButton}
             />
           </div>
