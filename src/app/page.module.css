@@ -568,14 +568,15 @@
 }
 
 .priceValue {
-  color: var(--foreground);
-  font-size: 25px;
-  line-height: 29px;
+  color: var(--foreground-subtle);
+  font-size: 21px;
+  line-height: 26px;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: 600;
+  opacity: 0.82;
   text-decoration: line-through;
-  text-decoration-thickness: 2.5px;
-  text-decoration-color: color-mix(in srgb, var(--foreground) 85%, transparent);
+  text-decoration-thickness: 2px;
+  text-decoration-color: color-mix(in srgb, var(--foreground-subtle) 72%, transparent);
 }
 
 .priceHeadline {
