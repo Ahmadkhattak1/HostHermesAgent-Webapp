@@ -300,7 +300,7 @@ export function DeployFlow({ initialInstance }: DeployFlowProps) {
         <div className={styles.statusBrand}>
           <div className={styles.statusBrandMark}>
             <Image
-              src="/assets/figma/hero-badge.png"
+              src="/assets/figma/app-logo.png"
               alt=""
               width={40}
               height={40}

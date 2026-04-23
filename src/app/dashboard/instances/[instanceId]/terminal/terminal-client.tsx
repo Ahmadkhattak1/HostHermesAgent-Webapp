@@ -938,7 +938,7 @@ export function TerminalClient({
             <div className={styles.terminalSidebarBrand}>
               <div className={styles.terminalSidebarMark}>
                 <Image
-                  src="/assets/figma/hero-badge.png"
+                  src="/assets/figma/app-logo.png"
                   alt=""
                   width={40}
                   height={40}

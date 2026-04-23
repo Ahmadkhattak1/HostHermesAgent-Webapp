@@ -353,6 +353,8 @@ function getInitials(name: string) {
 }
 
 export default function Home() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <div className={styles.page} id="top">
       <header className={styles.header}>
@@ -360,7 +362,7 @@ export default function Home() {
           <a className={styles.brand} href="#top" aria-label="Host Hermes Agent">
             <span className={styles.brandMark}>
               <Image
-                src="/assets/figma/host-hermes-logo.png"
+                src="/assets/figma/app-logo.png"
                 alt=""
                 width={48}
                 height={48}
@@ -388,7 +390,7 @@ export default function Home() {
           <section className={styles.heroSection}>
             <div className={styles.heroAgentIntro}>
               <Image
-                src="/assets/figma/hero-badge.png"
+                  src="/assets/figma/hero-badge-hermes.png"
                 alt="Hermes Agent"
                 width={56}
                 height={56}
@@ -590,10 +592,10 @@ export default function Home() {
         </aside>
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <p className={styles.footerCopy}>&copy; 2024 HostHermesAgent.</p>
-          <div className={styles.footerLinks}>
+        <footer className={styles.footer}>
+          <div className={styles.footerInner}>
+            <p className={styles.footerCopy}>&copy; {currentYear} HostHermesAgent.</p>
+            <div className={styles.footerLinks}>
             {footerLinks.map((link) => (
               <a
                 className={styles.footerLink}
