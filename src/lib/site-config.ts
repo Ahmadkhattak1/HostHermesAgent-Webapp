@@ -30,6 +30,7 @@ export const ROBOTS_ALLOW_PATHS = [
 
 export const ROBOTS_DISALLOW_PATHS = [
   "/api/",
+  "/agent-markdown/",
   "/dashboard/",
   "/ws/",
 ] as const;
