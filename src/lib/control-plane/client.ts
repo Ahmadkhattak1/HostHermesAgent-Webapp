@@ -4,36 +4,12 @@ import { getControlPlaneRequestError } from "@/lib/control-plane/shared";
 import type { ControlPlaneErrorPayload } from "@/lib/control-plane/types";
 import { FIREBASE_ID_TOKEN_COOKIE_NAME } from "@/lib/firebase/session";
 
-function isLoopbackHostname(hostname: string) {
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname.endsWith(".localhost")
-  );
-}
-
-function getBrowserProxyOriginOverride(configuredBaseUrl: string) {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const currentUrl = new URL(window.location.origin);
-  const configuredUrl = new URL(configuredBaseUrl);
-
-  if (
-    currentUrl.protocol === "https:" &&
-    isLoopbackHostname(currentUrl.hostname) &&
-    configuredUrl.protocol !== "https:"
-  ) {
-    return currentUrl.origin;
-  }
-
-  return null;
-}
-
 export function getBrowserControlPlaneBaseUrl() {
+  if (typeof window !== "undefined") {
+    // Route browser traffic through Next rewrites so API and websocket calls stay same-origin.
+    return window.location.origin;
+  }
+
   const value = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL;
 
   if (!value) {
@@ -42,7 +18,7 @@ export function getBrowserControlPlaneBaseUrl() {
 
   const normalizedValue = value.replace(/\/+$/, "");
 
-  return getBrowserProxyOriginOverride(normalizedValue) ?? normalizedValue;
+  return normalizedValue;
 }
 
 function getBrowserAccessToken() {
