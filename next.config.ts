@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
+import { buildAgentDiscoveryLinkHeader } from "./src/lib/site-config";
 
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
 const controlPlaneOrigin =
@@ -27,6 +28,19 @@ const nextConfig: NextConfig = {
       {
         source: "/ws/:path*",
         destination: `${controlPlaneOrigin}/ws/:path*`,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Link",
+            value: buildAgentDiscoveryLinkHeader(),
+          },
+        ],
       },
     ];
   },
