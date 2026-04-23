@@ -155,10 +155,10 @@ export function SubscriptionFlow({
           </h1>
           <p className={styles.redirectCopy}>
             {cancelled
-              ? "Your card was not saved, so the 3-day trial did not start. Return and try checkout again when ready."
+              ? "Your checkout was cancelled, so the 3-day trial did not start. Return and try checkout again when ready."
               : sessionId
-                ? "Please wait while we confirm your 3-day trial and card-backed subscription."
-                : "Please wait while we securely transfer you to Stripe to save a card and start your 3-day trial."}
+                ? "Please wait while we confirm your 3-day trial and subscription."
+                : "Please wait while we securely transfer you to Stripe to start your 3-day trial."}
           </p>
         </div>
         {error ? <p className={`${styles.error} ${styles.redirectError}`}>{error}</p> : null}
