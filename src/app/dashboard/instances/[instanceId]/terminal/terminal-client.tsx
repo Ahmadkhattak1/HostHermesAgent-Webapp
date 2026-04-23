@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FitAddon } from "@xterm/addon-fit";
+import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 import styles from "@/app/console.module.css";
 import { SupportContactButton } from "@/components/support-contact-button";
@@ -35,6 +36,7 @@ type TerminalClientProps = {
 };
 
 type ConnectionState = "connecting" | "connected" | "error";
+type TerminalAction = "open" | "reset" | "update";
 
 type TerminalSocketServerMessage =
   | {
@@ -67,55 +69,6 @@ function getTerminalSocketBaseUrl() {
   url.search = "";
   url.hash = "";
   return url.toString().replace(/\/+$/, "");
-}
-
-function summarizeTerminalInput(input: string) {
-  const normalizedInput = input.replace(/\r/g, "\\r").replace(/\n/g, "\\n");
-
-  return {
-    bytes: new TextEncoder().encode(input).length,
-    classification: /^\d$/.test(input)
-      ? "single_digit"
-      : /^[\r\n]+$/.test(input)
-        ? "enter"
-        : input === "\u0003"
-          ? "ctrl_c"
-          : input.startsWith("\u001b")
-            ? "escape_sequence"
-            : /^[ -~]+$/.test(input)
-              ? "printable_text"
-              : "mixed",
-    containsCtrlC: input.includes("\u0003"),
-    containsEnter: input.includes("\r") || input.includes("\n"),
-    containsEscape: input.includes("\u001b"),
-    normalizedInput:
-      normalizedInput.length > 24
-        ? `${normalizedInput.slice(0, 24)}...`
-        : normalizedInput,
-  };
-}
-
-function summarizeTerminalOutput(output: string) {
-  return {
-    containsAttachBanner: output.includes("Connecting to the active Hermes setup session"),
-    containsChoicePrompt: output.includes("Choice [default"),
-    containsPrepareBanner: output.includes("Preparing your Hermes session"),
-    containsSelectProvider: output.includes("Select provider:"),
-    containsSessionClosed: output.includes("Terminal session closed"),
-    containsSetupWizard: output.includes("Hermes Agent Setup Wizard"),
-    length: output.length,
-  };
-}
-
-function isInterestingTerminalOutput(summary: ReturnType<typeof summarizeTerminalOutput>) {
-  return (
-    summary.containsAttachBanner ||
-    summary.containsChoicePrompt ||
-    summary.containsPrepareBanner ||
-    summary.containsSelectProvider ||
-    summary.containsSessionClosed ||
-    summary.containsSetupWizard
-  );
 }
 
 function getLatencyLabel(instance: PublicInstanceRecord) {
@@ -169,6 +122,77 @@ function SupportIcon() {
         strokeLinecap="round"
       />
       <circle cx="6.5" cy="10.35" r="0.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function OpenHermesIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M2.25 2.75C2.25 2.19772 2.69772 1.75 3.25 1.75H10.75C11.3023 1.75 11.75 2.19772 11.75 2.75V11.25C11.75 11.8023 11.3023 12.25 10.75 12.25H3.25C2.69772 12.25 2.25 11.8023 2.25 11.25V2.75Z"
+        stroke="currentColor"
+        strokeWidth="1.15"
+      />
+      <path
+        d="M4.5 5.25L6.25 7L4.5 8.75"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M7.5 8.75H9.5" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UpdateHermesIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M10.75 5.5A3.75 3.75 0 1 0 11 7"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
+      <path
+        d="M9.75 2.75H11.75V4.75"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.75 2.75L8.75 5.75"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function InstallHermesIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M7 2.25V8.25"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.75 6L7 8.25L9.25 6"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2.5 10.5C2.5 9.94772 2.94772 9.5 3.5 9.5H10.5C11.0523 9.5 11.5 9.94772 11.5 10.5C11.5 11.0523 11.0523 11.5 10.5 11.5H3.5C2.94772 11.5 2.5 11.0523 2.5 10.5Z"
+        stroke="currentColor"
+        strokeWidth="1.15"
+      />
     </svg>
   );
 }
@@ -297,6 +321,7 @@ export function TerminalClient({
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileTriggerRef = useRef<HTMLButtonElement | null>(null);
   const isPopout = searchParams.get("popout") === "1";
@@ -305,6 +330,8 @@ export function TerminalClient({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [pendingTerminalAction, setPendingTerminalAction] = useState<TerminalAction | null>(null);
+  const [terminalActionNotice, setTerminalActionNotice] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const {
     isMounted: isProfileMenuMounted,
@@ -383,7 +410,10 @@ export function TerminalClient({
     let manualShutdown = false;
     let sessionId: string | null = null;
     let webSocket: WebSocket | null = null;
+    let webglAddon: WebglAddon | null = null;
     let resizeFrame: number | null = null;
+    let lastResizeSignature: string | null = null;
+    let lastViewportSignature: string | null = null;
 
     const terminal = new Terminal({
       convertEol: true,
@@ -391,6 +421,10 @@ export function TerminalClient({
       fontFamily: "'Liberation Mono', 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace",
       fontSize: 14,
       rows: 36,
+      scrollback: 10_000,
+      scrollOnEraseInDisplay: true,
+      scrollOnUserInput: false,
+      smoothScrollDuration: 0,
       theme: {
         background: "#0a0a0a",
         black: "#0a0a0a",
@@ -407,6 +441,16 @@ export function TerminalClient({
     terminal.open(container);
     terminalRef.current = terminal;
     fitAddon.fit();
+    try {
+      webglAddon = new WebglAddon();
+      webglAddon.onContextLoss(() => {
+        webglAddon?.dispose();
+        webglAddon = null;
+      });
+      terminal.loadAddon(webglAddon);
+    } catch {
+      webglAddon = null;
+    }
     terminal.focus();
     terminal.writeln("Connecting to your Hermes instance...");
 
@@ -458,8 +502,21 @@ export function TerminalClient({
       webSocket.send(JSON.stringify(payload));
     }
 
-    function syncTerminalSize() {
+    function syncTerminalSize(reason: string) {
       fitAddon.fit();
+      const nextSignature = `${terminal.cols}x${terminal.rows}`;
+
+      if (nextSignature === lastResizeSignature) {
+        return;
+      }
+
+      lastResizeSignature = nextSignature;
+      logClientInfo("terminal", "resize.sent", {
+        instanceId: instance.id,
+        reason,
+        sessionId,
+        size: nextSignature,
+      });
       sendSocketMessage({
         cols: terminal.cols,
         rows: terminal.rows,
@@ -467,14 +524,14 @@ export function TerminalClient({
       });
     }
 
-    function scheduleTerminalFit() {
+    function scheduleTerminalFit(reason: string) {
       if (resizeFrame !== null) {
         window.cancelAnimationFrame(resizeFrame);
       }
 
       resizeFrame = window.requestAnimationFrame(() => {
         resizeFrame = null;
-        syncTerminalSize();
+        syncTerminalSize(reason);
       });
     }
 
@@ -510,7 +567,7 @@ export function TerminalClient({
         });
         setConnectionState("connected");
         setError(null);
-        scheduleTerminalFit();
+        scheduleTerminalFit("socket_open");
         focusTerminal("socket_open");
         heartbeatTimer = window.setInterval(() => {
           sendSocketMessage({
@@ -546,17 +603,6 @@ export function TerminalClient({
         }
 
         if (payload.type === "output") {
-          const summary = summarizeTerminalOutput(payload.output);
-
-          if (payload.reset || isInterestingTerminalOutput(summary)) {
-            logClientInfo("terminal", "socket.output_interesting", {
-              instanceId: instance.id,
-              reset: payload.reset,
-              sessionId: existingSessionId,
-              summary,
-            });
-          }
-
           if (payload.reset) {
             terminal.clear();
           }
@@ -634,6 +680,7 @@ export function TerminalClient({
 
       const previousSessionId = sessionId;
       sessionId = null;
+      sessionIdRef.current = null;
 
       if (isReconnect) {
         reconnectAttempt += 1;
@@ -665,6 +712,14 @@ export function TerminalClient({
         }
 
         sessionId = session.sessionId;
+        sessionIdRef.current = session.sessionId;
+        if (session.autoInstallStarted) {
+          setTerminalActionNotice(
+            "Started the Hermes installer automatically for this instance's first terminal session.",
+          );
+        } else if (!isReconnect) {
+          setTerminalActionNotice(null);
+        }
         await connectSocket(session.sessionId, session.socketToken);
       } catch (caughtError: unknown) {
         if (cancelled) {
@@ -698,10 +753,6 @@ export function TerminalClient({
     }
 
     const disposeInput = terminal.onData((input) => {
-      logClientInfo("terminal", "input.forwarded", {
-        instanceId: instance.id,
-        summary: summarizeTerminalInput(input),
-      });
       sendSocketMessage({
         input,
         type: "input",
@@ -709,14 +760,17 @@ export function TerminalClient({
     });
 
     const resizeObserver = new ResizeObserver(() => {
-      scheduleTerminalFit();
+      const nextViewportSignature = `${container.clientWidth}x${container.clientHeight}`;
+
+      if (nextViewportSignature === lastViewportSignature) {
+        return;
+      }
+
+      lastViewportSignature = nextViewportSignature;
+      scheduleTerminalFit("resize_observer");
     });
 
     resizeObserver.observe(container);
-
-    if (container.parentElement) {
-      resizeObserver.observe(container.parentElement);
-    }
 
     const handleWindowFocus = () => {
       focusTerminal("window_focus");
@@ -733,15 +787,27 @@ export function TerminalClient({
       }
     };
 
-    window.addEventListener("resize", scheduleTerminalFit);
-    window.addEventListener("orientationchange", scheduleTerminalFit);
-    window.visualViewport?.addEventListener("resize", scheduleTerminalFit);
+    const handleWindowResize = () => {
+      scheduleTerminalFit("window_resize");
+    };
+
+    const handleOrientationChange = () => {
+      scheduleTerminalFit("orientation_change");
+    };
+
+    const handleViewportResize = () => {
+      scheduleTerminalFit("visual_viewport_resize");
+    };
+
+    window.addEventListener("resize", handleWindowResize);
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.visualViewport?.addEventListener("resize", handleViewportResize);
     window.addEventListener("focus", handleWindowFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     void document.fonts?.ready.then(() => {
-      scheduleTerminalFit();
+      scheduleTerminalFit("fonts_ready");
     });
-    scheduleTerminalFit();
+    scheduleTerminalFit("initial_layout");
     window.setTimeout(() => {
       focusTerminal("initial_mount");
     }, 0);
@@ -767,12 +833,14 @@ export function TerminalClient({
 
       disposeInput.dispose();
       resizeObserver.disconnect();
-      window.removeEventListener("resize", scheduleTerminalFit);
-      window.removeEventListener("orientationchange", scheduleTerminalFit);
-      window.visualViewport?.removeEventListener("resize", scheduleTerminalFit);
+      window.removeEventListener("resize", handleWindowResize);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.visualViewport?.removeEventListener("resize", handleViewportResize);
       window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       terminalRef.current = null;
+      sessionIdRef.current = null;
+      webglAddon?.dispose();
       terminal.dispose();
 
       if (sessionId) {
@@ -797,52 +865,161 @@ export function TerminalClient({
         ? "Connecting"
         : "Connection issue";
 
+  async function runTerminalAction(action: TerminalAction) {
+    const activeSessionId = sessionIdRef.current;
+
+    if (!activeSessionId) {
+      setError("Open the terminal connection before running this action.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        action === "open"
+          ? "Open Hermes agent in this machine shell?"
+          : action === "update"
+            ? "Update Hermes Agent on this instance? This will interrupt the current foreground terminal program and run `hermes update` in this machine shell."
+            : "Reset and install Hermes agent on this instance? This will interrupt the current foreground terminal program and run `curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash` in this machine shell.",
+      )
+    ) {
+      return;
+    }
+
+    setPendingTerminalAction(action);
+    setTerminalActionNotice(null);
+    setError(null);
+
+    try {
+      await controlPlaneJsonRequest<TerminalMutationEnvelope>(
+        `/api/v1/instances/${instance.id}/terminal/action`,
+        "POST",
+        {
+          action,
+          sessionId: activeSessionId,
+        },
+      );
+      setTerminalActionNotice(
+        action === "open"
+          ? "Tried to open Hermes agent in the current machine shell."
+          : action === "update"
+          ? "Sent `hermes update` to the current machine shell."
+          : "Sent the Hermes installer command to the current machine shell.",
+      );
+    } catch (caughtError: unknown) {
+      setError(
+        sanitizeUserFacingErrorMessage(
+          caughtError,
+          action === "open"
+            ? "Could not open Hermes Agent in the current shell."
+            : action === "update"
+            ? "Could not start the Hermes Agent update."
+            : "Could not reset the Hermes Agent installation.",
+        ),
+      );
+    } finally {
+      setPendingTerminalAction(null);
+    }
+  }
+
   return (
     <div
       className={`${styles.terminalAppShell} ${
         isPopout ? styles.terminalAppShellPopout : ""
       }`}
     >
-      <aside
-        className={`${styles.terminalSidebar} ${
-          showSidebar ? "" : styles.terminalSidebarCollapsed
-        }`}
-        aria-hidden={!showSidebar}
-      >
-        <div className={styles.terminalSidebarBrandWrap}>
-          <div className={styles.terminalSidebarBrand}>
-            <div className={styles.terminalSidebarMark}>
-              <Image
-                src="/assets/figma/hero-badge.png"
-                alt=""
-                width={40}
-                height={40}
-                priority
-              />
+      {!isPopout ? (
+        <aside
+          className={`${styles.terminalSidebar} ${
+            showSidebar ? "" : styles.terminalSidebarCollapsed
+          }`}
+          aria-hidden={!showSidebar}
+        >
+          <div className={styles.terminalSidebarBrandWrap}>
+            <div className={styles.terminalSidebarBrand}>
+              <div className={styles.terminalSidebarMark}>
+                <Image
+                  src="/assets/figma/hero-badge.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  priority
+                />
+              </div>
+              <span className={styles.terminalSidebarBrandName}>Hermes Agent</span>
             </div>
-            <span className={styles.terminalSidebarBrandName}>Hermes Agent</span>
           </div>
-        </div>
 
-        <nav className={styles.terminalSidebarNav} aria-label="Terminal">
-          <div className={styles.terminalSidebarItemActive}>
-            <TerminalSidebarIcon />
-            <span>Terminal</span>
+          <nav className={styles.terminalSidebarNav} aria-label="Terminal">
+            <div className={styles.terminalSidebarItemActive}>
+              <TerminalSidebarIcon />
+              <span>Terminal</span>
+            </div>
+            <p className={styles.terminalSidebarSubnavLabel}>Commands</p>
+            <div className={styles.terminalSidebarSubnav}>
+              <button
+                className={styles.terminalSidebarSubLink}
+                disabled={pendingTerminalAction !== null}
+                onClick={() => void runTerminalAction("open")}
+                type="button"
+              >
+                <span className={styles.terminalSidebarCommandIcon}>
+                  <OpenHermesIcon />
+                </span>
+                <span className={styles.terminalSidebarCommandCopy}>
+                  <span className={styles.terminalSidebarCommandLabel}>
+                    {pendingTerminalAction === "open" ? "Opening Hermes..." : "Open Hermes agent"}
+                  </span>
+                  <span className={styles.terminalSidebarCommandHint}>`hermes`</span>
+                </span>
+              </button>
+              <button
+                className={styles.terminalSidebarSubLink}
+                disabled={pendingTerminalAction !== null}
+                onClick={() => void runTerminalAction("update")}
+                type="button"
+              >
+                <span className={styles.terminalSidebarCommandIcon}>
+                  <UpdateHermesIcon />
+                </span>
+                <span className={styles.terminalSidebarCommandCopy}>
+                  <span className={styles.terminalSidebarCommandLabel}>
+                    {pendingTerminalAction === "update" ? "Checking for update..." : "Check for Update"}
+                  </span>
+                  <span className={styles.terminalSidebarCommandHint}>`hermes update`</span>
+                </span>
+              </button>
+              <button
+                className={styles.terminalSidebarSubLink}
+                disabled={pendingTerminalAction !== null}
+                onClick={() => void runTerminalAction("reset")}
+                type="button"
+              >
+                <span className={styles.terminalSidebarCommandIcon}>
+                  <InstallHermesIcon />
+                </span>
+                <span className={styles.terminalSidebarCommandCopy}>
+                  <span className={styles.terminalSidebarCommandLabel}>
+                    {pendingTerminalAction === "reset" ? "Resetting and installing..." : "Reset and install Hermes agent"}
+                  </span>
+                  <span className={styles.terminalSidebarCommandHint}>`curl ... | bash`</span>
+                </span>
+              </button>
+            </div>
+          </nav>
+
+          <div className={styles.terminalSidebarFooter}>
+            <SupportContactButton buttonClassName={styles.terminalSidebarSupportButton}>
+              <SupportIcon />
+              <span>Support</span>
+            </SupportContactButton>
           </div>
-        </nav>
-
-        <div className={styles.terminalSidebarFooter}>
-          <SupportContactButton buttonClassName={styles.terminalSidebarSupportButton}>
-            <SupportIcon />
-            <span>Support</span>
-          </SupportContactButton>
-        </div>
-      </aside>
+        </aside>
+      ) : null}
 
       <section className={styles.terminalWorkspace}>
-        <header className={styles.terminalWorkspaceHeader}>
-          <div className={styles.terminalWorkspaceHeaderLead}>
-            {!isPopout ? (
+        {!isPopout ? (
+          <header className={styles.terminalWorkspaceHeader}>
+            <div className={styles.terminalWorkspaceHeaderLead}>
               <button
                 className={styles.terminalSidebarToggle}
                 type="button"
@@ -854,103 +1031,103 @@ export function TerminalClient({
               >
                 <SidebarToggleIcon isOpen={showSidebar} />
               </button>
-            ) : null}
-          </div>
-          <div className={styles.terminalWorkspaceProfile}>
-            <div className={styles.terminalWorkspaceDivider} />
-            <div className={styles.terminalProfileMenuShell}>
-              <button
-                ref={profileTriggerRef}
-                className={styles.terminalProfileTrigger}
-                type="button"
-                aria-expanded={isProfileMenuOpen}
-                aria-haspopup="menu"
-                aria-label="Open account menu"
-                onClick={() => {
-                  setProfileError(null);
-                  setIsProfileMenuOpen((current) => !current);
-                }}
-              >
-                <div className={styles.terminalWorkspaceAvatar}>
-                  {viewerPhotoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={viewerPhotoUrl} alt="" referrerPolicy="no-referrer" />
-                  ) : (
-                    <span>{avatarInitial}</span>
-                  )}
-                </div>
-              </button>
-
-              {isProfileMenuMounted ? (
-                <div
-                  ref={profileMenuRef}
-                  className={styles.terminalProfileMenu}
-                  data-state={profileMenuState}
-                  role="menu"
-                  aria-label="Account menu"
+            </div>
+            <div className={styles.terminalWorkspaceProfile}>
+              <div className={styles.terminalWorkspaceDivider} />
+              <div className={styles.terminalProfileMenuShell}>
+                <button
+                  ref={profileTriggerRef}
+                  className={styles.terminalProfileTrigger}
+                  type="button"
+                  aria-expanded={isProfileMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Open account menu"
+                  onClick={() => {
+                    setProfileError(null);
+                    setIsProfileMenuOpen((current) => !current);
+                  }}
                 >
-                  <div className={styles.terminalProfileMenuMeta}>
-                    <p className={styles.terminalProfileMenuName}>{viewerLabel}</p>
-                    {viewerEmail ? (
-                      <p className={styles.terminalProfileMenuEmail}>{viewerEmail}</p>
+                  <div className={styles.terminalWorkspaceAvatar}>
+                    {viewerPhotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={viewerPhotoUrl} alt="" referrerPolicy="no-referrer" />
+                    ) : (
+                      <span>{avatarInitial}</span>
+                    )}
+                  </div>
+                </button>
+
+                {isProfileMenuMounted ? (
+                  <div
+                    ref={profileMenuRef}
+                    className={styles.terminalProfileMenu}
+                    data-state={profileMenuState}
+                    role="menu"
+                    aria-label="Account menu"
+                  >
+                    <div className={styles.terminalProfileMenuMeta}>
+                      <p className={styles.terminalProfileMenuName}>{viewerLabel}</p>
+                      {viewerEmail ? (
+                        <p className={styles.terminalProfileMenuEmail}>{viewerEmail}</p>
+                      ) : null}
+                    </div>
+
+                    <Link
+                      className={styles.terminalProfileMenuLink}
+                      href="/dashboard/settings"
+                      role="menuitem"
+                      onClick={() => {
+                        setProfileError(null);
+                        setIsProfileMenuOpen(false);
+                      }}
+                    >
+                      <SettingsIcon />
+                      <span>Settings</span>
+                    </Link>
+
+                    <button
+                      className={styles.terminalProfileMenuButton}
+                      type="button"
+                      role="menuitem"
+                      disabled={isSigningOut}
+                      onClick={() => {
+                        void (async () => {
+                          try {
+                            setProfileError(null);
+                            setIsSigningOut(true);
+                            logClientInfo("auth", "sign_out_started", {
+                              instanceId: instance.id,
+                            });
+                            await signOutFirebaseUser();
+                            clearPendingGoogleSignInPath();
+                            clearFirebaseIdTokenCookie();
+                            logClientInfo("auth", "sign_out_completed", {
+                              instanceId: instance.id,
+                            });
+                            window.location.assign("/");
+                          } catch (caughtError) {
+                            logClientError("auth", "sign_out_failed", caughtError, {
+                              instanceId: instance.id,
+                            });
+                            setProfileError("Could not sign out right now. Please try again.");
+                            setIsSigningOut(false);
+                          }
+                        })();
+                      }}
+                    >
+                      <SignOutIcon />
+                      <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
+                    </button>
+
+                    {profileError ? (
+                      <p className={styles.terminalProfileMenuError}>{profileError}</p>
                     ) : null}
                   </div>
-
-                  <Link
-                    className={styles.terminalProfileMenuLink}
-                    href="/dashboard/settings"
-                    role="menuitem"
-                    onClick={() => {
-                      setProfileError(null);
-                      setIsProfileMenuOpen(false);
-                    }}
-                  >
-                    <SettingsIcon />
-                    <span>Settings</span>
-                  </Link>
-
-                  <button
-                    className={styles.terminalProfileMenuButton}
-                    type="button"
-                    role="menuitem"
-                    disabled={isSigningOut}
-                    onClick={() => {
-                      void (async () => {
-                        try {
-                          setProfileError(null);
-                          setIsSigningOut(true);
-                          logClientInfo("auth", "sign_out_started", {
-                            instanceId: instance.id,
-                          });
-                          await signOutFirebaseUser();
-                          clearPendingGoogleSignInPath();
-                          clearFirebaseIdTokenCookie();
-                          logClientInfo("auth", "sign_out_completed", {
-                            instanceId: instance.id,
-                          });
-                          window.location.assign("/");
-                        } catch (caughtError) {
-                          logClientError("auth", "sign_out_failed", caughtError, {
-                            instanceId: instance.id,
-                          });
-                          setProfileError("Could not sign out right now. Please try again.");
-                          setIsSigningOut(false);
-                        }
-                      })();
-                    }}
-                  >
-                    <SignOutIcon />
-                    <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
-                  </button>
-
-                  {profileError ? (
-                    <p className={styles.terminalProfileMenuError}>{profileError}</p>
-                  ) : null}
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        ) : null}
 
         <div
           className={`${styles.terminalWorkspaceCanvas} ${
@@ -1024,7 +1201,11 @@ export function TerminalClient({
                 </div>
               ) : null}
 
-              <div className={styles.terminalShellViewportFrame}>
+              <div
+                className={`${styles.terminalShellViewportFrame} ${
+                  isPopout ? styles.terminalShellViewportFramePopout : ""
+                }`}
+              >
                 <div
                   className={`${styles.terminalShellCard} ${
                     isPopout ? styles.terminalShellCardPopout : ""
@@ -1037,29 +1218,32 @@ export function TerminalClient({
                     });
                   }}
                 >
-                  <div className={styles.terminalShellBar}>
-                    <span className={styles.terminalPromptLabel}>{promptLabel}</span>
-                    {isPopout ? (
-                      <div className={styles.terminalLatencyBadge}>
-                        <LatencyIcon />
-                        <span>{getLatencyLabel(instance)}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div ref={containerRef} className={styles.terminalViewport} />
-                  <div className={styles.terminalFooterBar}>
-                    <span
-                      className={`${styles.terminalFooterStatus} ${
-                        connectionState === "connected"
-                          ? styles.terminalFooterStatusConnected
-                          : connectionState === "error"
-                            ? styles.terminalFooterStatusError
-                            : styles.terminalFooterStatusPending
-                      }`}
-                    >
-                      {connectionLabel}
-                    </span>
-                  </div>
+                  {!isPopout ? (
+                    <div className={styles.terminalShellBar}>
+                      <span className={styles.terminalPromptLabel}>{promptLabel}</span>
+                    </div>
+                  ) : null}
+                  <div
+                    ref={containerRef}
+                    className={`${styles.terminalViewport} ${
+                      isPopout ? styles.terminalViewportPopout : ""
+                    }`}
+                  />
+                  {!isPopout ? (
+                    <div className={styles.terminalFooterBar}>
+                      <span
+                        className={`${styles.terminalFooterStatus} ${
+                          connectionState === "connected"
+                            ? styles.terminalFooterStatusConnected
+                            : connectionState === "error"
+                              ? styles.terminalFooterStatusError
+                              : styles.terminalFooterStatusPending
+                        }`}
+                      >
+                        {connectionLabel}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -1067,6 +1251,10 @@ export function TerminalClient({
                 <p className={`${styles.error} ${styles.terminalInlineError}`}>
                   {error} Refresh the page to reopen the terminal session.
                 </p>
+              ) : null}
+
+              {terminalActionNotice ? (
+                <p className={styles.terminalActionNotice}>{terminalActionNotice}</p>
               ) : null}
             </div>
           </div>

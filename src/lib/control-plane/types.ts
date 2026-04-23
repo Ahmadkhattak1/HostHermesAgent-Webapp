@@ -49,6 +49,7 @@ export type PublicInstanceRecord = {
   dropletName: string;
   errorMessage: string | null;
   host: string | null;
+  hermesInstallTriggeredAt: string | null;
   id: string;
   image: string;
   latencyMs: number | null;
@@ -86,6 +87,7 @@ export type PortalSessionEnvelope = {
 };
 
 export type TerminalSessionEnvelope = {
+  autoInstallStarted?: boolean;
   cursor: number;
   requestId?: string;
   sessionId: string;
