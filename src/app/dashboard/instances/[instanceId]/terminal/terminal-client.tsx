@@ -24,7 +24,7 @@ import type {
 import { clearFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
 import { clearPendingGoogleSignInPath } from "@/lib/firebase/google-sign-in";
 import { signOutFirebaseUser } from "@/lib/firebase/client";
-import { logClientError, logClientInfo } from "@/lib/logging/client";
+import { logClientError, logClientInfo, logClientWarn } from "@/lib/logging/client";
 import { sanitizeUserFacingErrorMessage } from "@/lib/user-facing-errors";
 
 type TerminalClientProps = {
@@ -67,6 +67,55 @@ function getTerminalSocketBaseUrl() {
   url.search = "";
   url.hash = "";
   return url.toString().replace(/\/+$/, "");
+}
+
+function summarizeTerminalInput(input: string) {
+  const normalizedInput = input.replace(/\r/g, "\\r").replace(/\n/g, "\\n");
+
+  return {
+    bytes: new TextEncoder().encode(input).length,
+    classification: /^\d$/.test(input)
+      ? "single_digit"
+      : /^[\r\n]+$/.test(input)
+        ? "enter"
+        : input === "\u0003"
+          ? "ctrl_c"
+          : input.startsWith("\u001b")
+            ? "escape_sequence"
+            : /^[ -~]+$/.test(input)
+              ? "printable_text"
+              : "mixed",
+    containsCtrlC: input.includes("\u0003"),
+    containsEnter: input.includes("\r") || input.includes("\n"),
+    containsEscape: input.includes("\u001b"),
+    normalizedInput:
+      normalizedInput.length > 24
+        ? `${normalizedInput.slice(0, 24)}...`
+        : normalizedInput,
+  };
+}
+
+function summarizeTerminalOutput(output: string) {
+  return {
+    containsAttachBanner: output.includes("Connecting to the active Hermes setup session"),
+    containsChoicePrompt: output.includes("Choice [default"),
+    containsPrepareBanner: output.includes("Preparing your Hermes session"),
+    containsSelectProvider: output.includes("Select provider:"),
+    containsSessionClosed: output.includes("Terminal session closed"),
+    containsSetupWizard: output.includes("Hermes Agent Setup Wizard"),
+    length: output.length,
+  };
+}
+
+function isInterestingTerminalOutput(summary: ReturnType<typeof summarizeTerminalOutput>) {
+  return (
+    summary.containsAttachBanner ||
+    summary.containsChoicePrompt ||
+    summary.containsPrepareBanner ||
+    summary.containsSelectProvider ||
+    summary.containsSessionClosed ||
+    summary.containsSetupWizard
+  );
 }
 
 function getLatencyLabel(instance: PublicInstanceRecord) {
@@ -429,8 +478,12 @@ export function TerminalClient({
       });
     }
 
-    function focusTerminal() {
+    function focusTerminal(reason: string) {
       terminal.focus();
+      logClientInfo("terminal", "focus.requested", {
+        instanceId: instance.id,
+        reason,
+      });
     }
 
     async function connectSocket(existingSessionId: string, existingSocketToken: string) {
@@ -458,7 +511,7 @@ export function TerminalClient({
         setConnectionState("connected");
         setError(null);
         scheduleTerminalFit();
-        focusTerminal();
+        focusTerminal("socket_open");
         heartbeatTimer = window.setInterval(() => {
           sendSocketMessage({
             type: "ping",
@@ -484,11 +537,26 @@ export function TerminalClient({
         }
 
         if (payload.type === "ready") {
+          logClientInfo("terminal", "socket.ready", {
+            instanceId: instance.id,
+            sessionId: existingSessionId,
+          });
           setConnectionState("connected");
           return;
         }
 
         if (payload.type === "output") {
+          const summary = summarizeTerminalOutput(payload.output);
+
+          if (payload.reset || isInterestingTerminalOutput(summary)) {
+            logClientInfo("terminal", "socket.output_interesting", {
+              instanceId: instance.id,
+              reset: payload.reset,
+              sessionId: existingSessionId,
+              summary,
+            });
+          }
+
           if (payload.reset) {
             terminal.clear();
           }
@@ -501,6 +569,10 @@ export function TerminalClient({
         }
 
         if (payload.type === "closed") {
+          logClientWarn("terminal", "socket.server_closed", {
+            instanceId: instance.id,
+            sessionId: existingSessionId,
+          });
           setConnectionState("connecting");
           terminal.writeln("\r\n[HostHermes] Reconnecting your terminal...\r\n");
           void openTerminalSession(true);
@@ -626,6 +698,10 @@ export function TerminalClient({
     }
 
     const disposeInput = terminal.onData((input) => {
+      logClientInfo("terminal", "input.forwarded", {
+        instanceId: instance.id,
+        summary: summarizeTerminalInput(input),
+      });
       sendSocketMessage({
         input,
         type: "input",
@@ -642,16 +718,33 @@ export function TerminalClient({
       resizeObserver.observe(container.parentElement);
     }
 
+    const handleWindowFocus = () => {
+      focusTerminal("window_focus");
+    };
+
+    const handleVisibilityChange = () => {
+      logClientInfo("terminal", "visibility.changed", {
+        instanceId: instance.id,
+        state: document.visibilityState,
+      });
+
+      if (document.visibilityState === "visible") {
+        focusTerminal("visibility_change");
+      }
+    };
+
     window.addEventListener("resize", scheduleTerminalFit);
     window.addEventListener("orientationchange", scheduleTerminalFit);
     window.visualViewport?.addEventListener("resize", scheduleTerminalFit);
-    window.addEventListener("focus", focusTerminal);
-    document.addEventListener("visibilitychange", focusTerminal);
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     void document.fonts?.ready.then(() => {
       scheduleTerminalFit();
     });
     scheduleTerminalFit();
-    window.setTimeout(focusTerminal, 0);
+    window.setTimeout(() => {
+      focusTerminal("initial_mount");
+    }, 0);
     void openTerminalSession(false);
 
     return () => {
@@ -677,8 +770,8 @@ export function TerminalClient({
       window.removeEventListener("resize", scheduleTerminalFit);
       window.removeEventListener("orientationchange", scheduleTerminalFit);
       window.visualViewport?.removeEventListener("resize", scheduleTerminalFit);
-      window.removeEventListener("focus", focusTerminal);
-      document.removeEventListener("visibilitychange", focusTerminal);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       terminalRef.current = null;
       terminal.dispose();
 
@@ -938,6 +1031,10 @@ export function TerminalClient({
                   }`}
                   onPointerDown={() => {
                     terminalRef.current?.focus();
+                    logClientInfo("terminal", "focus.requested", {
+                      instanceId: instance.id,
+                      reason: "pointer_down",
+                    });
                   }}
                 >
                   <div className={styles.terminalShellBar}>
