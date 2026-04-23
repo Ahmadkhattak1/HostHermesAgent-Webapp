@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import { SignInRedirectContent } from "@/app/signin/signin-redirect";
 import { getAuthenticatedSession } from "@/lib/control-plane/server";
 import { getDefaultProtectedPath, sanitizeNextPath } from "@/lib/routing";
-import { SignInRedirectContent } from "@/app/signin/signin-redirect";
 
 type SignInPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

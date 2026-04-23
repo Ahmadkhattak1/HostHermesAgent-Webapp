@@ -2,13 +2,16 @@
 
 import { useEffect } from "react";
 import { onIdTokenChanged } from "firebase/auth";
-import { clearFirebaseIdTokenCookie, writeFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
-import { ensureFirebaseAuth } from "@/lib/firebase/client";
 import {
-  clearPendingGoogleSignInPath,
-  readPendingGoogleSignInPath,
-  resolveExistingGoogleSession,
-} from "@/lib/firebase/google-sign-in";
+  clearFirebaseIdTokenCookie,
+  hasFirebaseIdTokenCookie,
+  writeFirebaseIdTokenCookie,
+} from "@/lib/firebase/client-session";
+import {
+  ensureFirebaseAuth,
+  getFirebaseRuntimeDiagnostics,
+  getResolvedFirebaseUser,
+} from "@/lib/firebase/client";
 import { logClientError, logClientInfo } from "@/lib/logging/client";
 
 export function FirebaseAuthBridge() {
@@ -18,7 +21,25 @@ export function FirebaseAuthBridge() {
 
     void ensureFirebaseAuth()
       .then(async (auth) => {
+        logClientInfo("auth", "signin.bridge_bootstrap_started", {
+          ...getFirebaseRuntimeDiagnostics(),
+          currentUserId: auth.currentUser?.uid ?? null,
+          hasFirebaseCookie: hasFirebaseIdTokenCookie(),
+        });
+        const bootstrappedUser =
+          auth.currentUser ?? (await getResolvedFirebaseUser());
+
+        if (cancelled) {
+          return;
+        }
+
         unsubscribe = onIdTokenChanged(auth, async (user) => {
+          logClientInfo("auth", "session.id_token_changed", {
+            ...getFirebaseRuntimeDiagnostics(),
+            hasFirebaseCookie: hasFirebaseIdTokenCookie(),
+            userId: user?.uid ?? null,
+          });
+
           if (!user) {
             clearFirebaseIdTokenCookie();
             logClientInfo("auth", "session.cleared");
@@ -39,30 +60,21 @@ export function FirebaseAuthBridge() {
           }
         });
 
-        const pendingNextPath = readPendingGoogleSignInPath();
-
-        if (!pendingNextPath || cancelled) {
-          return;
-        }
-
-        try {
-          const restoredUser = await resolveExistingGoogleSession();
-
-          if (!restoredUser || cancelled) {
-            return;
+        if (bootstrappedUser) {
+          try {
+            const token = await bootstrappedUser.getIdToken();
+            writeFirebaseIdTokenCookie(token);
+            logClientInfo("auth", "session.bootstrap_completed", {
+              ...getFirebaseRuntimeDiagnostics(),
+              hasFirebaseCookie: hasFirebaseIdTokenCookie(),
+              userId: bootstrappedUser.uid,
+            });
+          } catch (error) {
+            clearFirebaseIdTokenCookie();
+            logClientError("auth", "session.bootstrap_sync_failed", error, {
+              userId: bootstrappedUser.uid,
+            });
           }
-
-          clearPendingGoogleSignInPath();
-          logClientInfo("auth", "signin.redirect_completed", {
-            nextPath: pendingNextPath,
-            userId: restoredUser.uid,
-          });
-          window.location.replace(pendingNextPath);
-        } catch (error) {
-          clearPendingGoogleSignInPath();
-          logClientError("auth", "signin.redirect_completion_failed", error, {
-            nextPath: pendingNextPath,
-          });
         }
       })
       .catch((error) => {

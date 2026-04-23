@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/dev-https-proxy.mjs",
+    "dev": "next dev --experimental-https --experimental-https-key certificates/localhost-key.pem --experimental-https-cert certificates/localhost.pem --hostname localhost --port 3000",
     "dev:insecure": "next dev",
-    "dev:next": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -14,7 +13,7 @@
     "@opentelemetry/api": "^1.9.1",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
-    "firebase": "^12.4.0",
+    "firebase": "^12.12.1",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -25,8 +24,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
-    "http-proxy": "^1.18.1",
-    "selfsigned": "^3.0.1",
     "typescript": "^5"
   }
 }

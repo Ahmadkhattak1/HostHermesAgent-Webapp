@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ProtectedRouteLink } from "@/components/protected-route-link";
+import { buildSubscriptionPath } from "@/lib/routing";
 import styles from "./page.module.css";
 
 type Capability = {
@@ -23,7 +24,7 @@ type Testimonial = {
 };
 
 type SidebarBenefit = {
-  icon: "always-on" | "secure" | "deploy" | "terminal";
+  icon: "always-on" | "secure" | "deploy" | "terminal" | "connect";
   label: string;
 };
 
@@ -157,14 +158,14 @@ const sidebarBenefits: SidebarBenefit[] = [
     label: "One-click deployment",
     icon: "deploy",
   },
-  {
-    label: "Browser terminal access",
-    icon: "terminal",
-  },
 ];
 
-const footerLinks = ["Status", "Privacy", "Terms", "Twitter", "GitHub"];
-const startTrialPath = "/dashboard/settings/subscription?next=%2Fdashboard%2Fdeploy";
+const footerLinks = [
+  { href: "#", label: "Privacy" },
+  { href: "#", label: "Terms" },
+  { href: "https://github.com/NousResearch/hermes-agent", label: "GitHub" },
+];
+const startTrialPath = buildSubscriptionPath("/dashboard");
 
 const connectApps: ConnectApp[] = [
   {
@@ -269,6 +270,22 @@ function SidebarBenefitIcon({ icon }: { icon: SidebarBenefit["icon"] }) {
         />
         <path
           d="M3.75 13.75 10 17.083l6.25-3.333"
+          stroke="currentColor"
+          strokeWidth="1.667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (icon === "connect") {
+    return (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="6.25" cy="6.25" r="2.917" stroke="currentColor" strokeWidth="1.667" />
+        <circle cx="13.75" cy="13.75" r="2.917" stroke="currentColor" strokeWidth="1.667" />
+        <path
+          d="m8.333 8.333 3.334 3.334"
           stroke="currentColor"
           strokeWidth="1.667"
           strokeLinecap="round"
@@ -516,10 +533,13 @@ export default function Home() {
               <h2>Deploy Hermes Agent</h2>
             </div>
 
-            <p className={styles.priceLine}>
-              <span className={styles.priceValue}>$19.99</span>
-              <span className={styles.priceUnit}>/mo</span>
-            </p>
+            <div className={styles.priceBlock}>
+              <p className={styles.priceLine}>
+                <span className={styles.priceValue}>$19.99</span>
+                <span className={styles.priceHeadline}>FREE</span>
+              </p>
+              <p className={styles.priceNote}>for first 3 days then $19.99 per month.</p>
+            </div>
 
             <div className={styles.asideList}>
               {sidebarBenefits.map((benefit) => (
@@ -530,39 +550,40 @@ export default function Home() {
                   <span>{benefit.label}</span>
                 </div>
               ))}
-            </div>
-
-            <div className={styles.asideConnectBlock}>
-              <div className={styles.asideConnectCopy}>
-                <p className={styles.asideConnectEyebrow}>Instantly connect</p>
-                <p className={styles.asideConnectText}>
-                  WhatsApp, Telegram, Slack, Discord, and more.
-                </p>
-              </div>
-
-              <div
-                className={styles.asideConnectIcons}
-                aria-label="Supported integrations"
-                role="list"
-              >
-                {connectApps.map((app) => (
-                  <div className={styles.connectIconWrap} key={app.name} role="listitem">
-                    <Image
-                      src={app.src}
-                      alt={app.name}
-                      width={22}
-                      height={22}
-                      loading="eager"
-                    />
+              <div className={styles.asideBenefitConnect}>
+                <div className={styles.asideBenefitCopy}>
+                  <span className={styles.asideBenefitIcon}>
+                    <SidebarBenefitIcon icon="connect" />
+                  </span>
+                  <div className={styles.asideConnectCopy}>
+                    <p className={styles.asideConnectEyebrow}>Instantly connect</p>
                   </div>
-                ))}
-                <span className={styles.connectMore}>+ more</span>
+                </div>
+
+                <div
+                  className={styles.asideConnectIcons}
+                  aria-label="Supported integrations"
+                  role="list"
+                >
+                  {connectApps.map((app) => (
+                    <div className={styles.connectIconWrap} key={app.name} role="listitem">
+                      <Image
+                        src={app.src}
+                        alt={app.name}
+                        width={22}
+                        height={22}
+                        loading="eager"
+                      />
+                    </div>
+                  ))}
+                  <span className={styles.connectMore}>+ more</span>
+                </div>
               </div>
             </div>
 
             <ActionLink
               href={startTrialPath}
-              label="Start 3-Day Trial"
+              label="Start free"
               className={styles.asideButton}
             />
           </div>
@@ -573,9 +594,15 @@ export default function Home() {
         <div className={styles.footerInner}>
           <p className={styles.footerCopy}>&copy; 2024 HostHermesAgent.</p>
           <div className={styles.footerLinks}>
-            {footerLinks.map((label) => (
-              <a className={styles.footerLink} href="#" key={label}>
-                {label}
+            {footerLinks.map((link) => (
+              <a
+                className={styles.footerLink}
+                href={link.href}
+                key={link.label}
+                rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                target={link.href.startsWith("http") ? "_blank" : undefined}
+              >
+                {link.label}
               </a>
             ))}
           </div>

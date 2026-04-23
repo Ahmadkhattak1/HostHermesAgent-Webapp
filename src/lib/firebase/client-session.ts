@@ -19,12 +19,12 @@ function getCookieAttributes(maxAgeSeconds: number) {
   return attributes.join("; ");
 }
 
-export function writeFirebaseIdTokenCookie(token: string) {
-  document.cookie = `${FIREBASE_ID_TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}; ${getCookieAttributes(FIREBASE_ID_TOKEN_COOKIE_MAX_AGE_SECONDS)}`;
-}
-
 export function clearFirebaseIdTokenCookie() {
   document.cookie = `${FIREBASE_ID_TOKEN_COOKIE_NAME}=; ${getCookieAttributes(0)}`;
+}
+
+export function writeFirebaseIdTokenCookie(token: string) {
+  document.cookie = `${FIREBASE_ID_TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}; ${getCookieAttributes(FIREBASE_ID_TOKEN_COOKIE_MAX_AGE_SECONDS)}`;
 }
 
 export function hasFirebaseIdTokenCookie() {

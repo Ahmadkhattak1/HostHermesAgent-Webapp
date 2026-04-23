@@ -12,6 +12,7 @@ import styles from "@/app/console.module.css";
 import { SupportContactButton } from "@/components/support-contact-button";
 import { useAnimatedPresence } from "@/components/use-animated-presence";
 import {
+  getBrowserControlPlaneBaseUrl,
   controlPlaneFetch,
   controlPlaneJsonRequest,
 } from "@/lib/control-plane/client";
@@ -21,6 +22,7 @@ import type {
   TerminalSessionEnvelope,
 } from "@/lib/control-plane/types";
 import { clearFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
+import { clearPendingGoogleSignInPath } from "@/lib/firebase/google-sign-in";
 import { signOutFirebaseUser } from "@/lib/firebase/client";
 import { logClientError, logClientInfo } from "@/lib/logging/client";
 import { sanitizeUserFacingErrorMessage } from "@/lib/user-facing-errors";
@@ -59,13 +61,7 @@ type TerminalSocketServerMessage =
 type TerminalSocketPayload = Record<string, number | string>;
 
 function getTerminalSocketBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL;
-
-  if (!baseUrl) {
-    throw new Error("Missing NEXT_PUBLIC_CONTROL_PLANE_URL in the web app environment.");
-  }
-
-  const url = new URL(baseUrl);
+  const url = new URL(getBrowserControlPlaneBaseUrl());
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "";
   url.search = "";
@@ -251,6 +247,7 @@ export function TerminalClient({
 }: TerminalClientProps) {
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const terminalRef = useRef<Terminal | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileTriggerRef = useRef<HTMLButtonElement | null>(null);
   const isPopout = searchParams.get("popout") === "1";
@@ -337,6 +334,7 @@ export function TerminalClient({
     let manualShutdown = false;
     let sessionId: string | null = null;
     let webSocket: WebSocket | null = null;
+    let resizeFrame: number | null = null;
 
     const terminal = new Terminal({
       convertEol: true,
@@ -358,7 +356,9 @@ export function TerminalClient({
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
     terminal.open(container);
+    terminalRef.current = terminal;
     fitAddon.fit();
+    terminal.focus();
     terminal.writeln("Connecting to your Hermes instance...");
 
     function clearHeartbeat() {
@@ -409,6 +409,30 @@ export function TerminalClient({
       webSocket.send(JSON.stringify(payload));
     }
 
+    function syncTerminalSize() {
+      fitAddon.fit();
+      sendSocketMessage({
+        cols: terminal.cols,
+        rows: terminal.rows,
+        type: "resize",
+      });
+    }
+
+    function scheduleTerminalFit() {
+      if (resizeFrame !== null) {
+        window.cancelAnimationFrame(resizeFrame);
+      }
+
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = null;
+        syncTerminalSize();
+      });
+    }
+
+    function focusTerminal() {
+      terminal.focus();
+    }
+
     async function connectSocket(existingSessionId: string, existingSocketToken: string) {
       const socketUrl = new URL(
         `/ws/instances/${encodeURIComponent(instance.id)}/terminal`,
@@ -433,11 +457,8 @@ export function TerminalClient({
         });
         setConnectionState("connected");
         setError(null);
-        sendSocketMessage({
-          cols: terminal.cols,
-          rows: terminal.rows,
-          type: "resize",
-        });
+        scheduleTerminalFit();
+        focusTerminal();
         heartbeatTimer = window.setInterval(() => {
           sendSocketMessage({
             type: "ping",
@@ -611,16 +632,26 @@ export function TerminalClient({
       });
     });
 
-    const handleResize = () => {
-      fitAddon.fit();
-      sendSocketMessage({
-        cols: terminal.cols,
-        rows: terminal.rows,
-        type: "resize",
-      });
-    };
+    const resizeObserver = new ResizeObserver(() => {
+      scheduleTerminalFit();
+    });
 
-    window.addEventListener("resize", handleResize);
+    resizeObserver.observe(container);
+
+    if (container.parentElement) {
+      resizeObserver.observe(container.parentElement);
+    }
+
+    window.addEventListener("resize", scheduleTerminalFit);
+    window.addEventListener("orientationchange", scheduleTerminalFit);
+    window.visualViewport?.addEventListener("resize", scheduleTerminalFit);
+    window.addEventListener("focus", focusTerminal);
+    document.addEventListener("visibilitychange", focusTerminal);
+    void document.fonts?.ready.then(() => {
+      scheduleTerminalFit();
+    });
+    scheduleTerminalFit();
+    window.setTimeout(focusTerminal, 0);
     void openTerminalSession(false);
 
     return () => {
@@ -633,12 +664,22 @@ export function TerminalClient({
 
       clearHeartbeat();
 
+      if (resizeFrame !== null) {
+        window.cancelAnimationFrame(resizeFrame);
+      }
+
       if (webSocket) {
         webSocket.close();
       }
 
       disposeInput.dispose();
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", scheduleTerminalFit);
+      window.removeEventListener("orientationchange", scheduleTerminalFit);
+      window.visualViewport?.removeEventListener("resize", scheduleTerminalFit);
+      window.removeEventListener("focus", focusTerminal);
+      document.removeEventListener("visibilitychange", focusTerminal);
+      terminalRef.current = null;
       terminal.dispose();
 
       if (sessionId) {
@@ -789,6 +830,7 @@ export function TerminalClient({
                             instanceId: instance.id,
                           });
                           await signOutFirebaseUser();
+                          clearPendingGoogleSignInPath();
                           clearFirebaseIdTokenCookie();
                           logClientInfo("auth", "sign_out_completed", {
                             instanceId: instance.id,
@@ -822,102 +864,115 @@ export function TerminalClient({
             isPopout ? styles.terminalWorkspaceCanvasPopout : ""
           }`}
         >
-          {!isPopout ? (
-            <div className={styles.terminalOverviewRow}>
-              <div className={styles.terminalOverviewCopy}>
-                <h1 className={styles.terminalOverviewTitle}>Terminal Shell</h1>
-                <p className={styles.terminalOverviewSubtitle}>
-                  Direct access to {hostLabel}.
-                </p>
-              </div>
-
-              <div className={styles.terminalOverviewActions}>
-                <div className={styles.terminalLatencyBadge}>
-                  <LatencyIcon />
-                  <span>{getLatencyLabel(instance)}</span>
-                </div>
-                <button
-                  className={styles.terminalPopoutButton}
-                  type="button"
-                  onClick={() => {
-                    const popupUrl = new URL(window.location.href);
-                    popupUrl.searchParams.set("popout", "1");
-
-                    const popup = window.open(
-                      popupUrl.toString(),
-                      "_blank",
-                      [
-                        "popup=yes",
-                        "noopener",
-                        "noreferrer",
-                        "menubar=no",
-                        "toolbar=no",
-                        "location=no",
-                        "status=no",
-                        "scrollbars=yes",
-                        "resizable=yes",
-                        "left=0",
-                        "top=0",
-                        `width=${window.screen.availWidth}`,
-                        `height=${window.screen.availHeight}`,
-                      ].join(","),
-                    );
-
-                    popup?.focus();
-
-                    try {
-                      popup?.moveTo(0, 0);
-                      popup?.resizeTo(
-                        window.screen.availWidth,
-                        window.screen.availHeight,
-                      );
-                    } catch {
-                      // Ignore browser restrictions on popup positioning and sizing.
-                    }
-                  }}
-                >
-                  <PopOutIcon />
-                  <span>Pop Out</span>
-                </button>
-              </div>
-            </div>
-          ) : null}
-
           <div
-            className={`${styles.terminalShellCard} ${
-              isPopout ? styles.terminalShellCardPopout : ""
+            className={`${styles.terminalWorkspaceContent} ${
+              isPopout ? styles.terminalWorkspaceContentPopout : ""
             }`}
           >
-            <div className={styles.terminalShellBar}>
-              <span className={styles.terminalPromptLabel}>{promptLabel}</span>
-              {isPopout ? (
-                <div className={styles.terminalLatencyBadge}>
-                  <LatencyIcon />
-                  <span>{getLatencyLabel(instance)}</span>
+            <div className={styles.terminalShellColumn}>
+              {!isPopout ? (
+                <div className={styles.terminalOverviewRow}>
+                  <div className={styles.terminalOverviewCopy}>
+                    <h1 className={styles.terminalOverviewTitle}>Terminal Shell</h1>
+                    <p className={styles.terminalOverviewSubtitle}>
+                      Direct access to {hostLabel}.
+                    </p>
+                  </div>
+
+                  <div className={styles.terminalOverviewActions}>
+                    <div className={styles.terminalLatencyBadge}>
+                      <LatencyIcon />
+                      <span>{getLatencyLabel(instance)}</span>
+                    </div>
+                    <button
+                      className={styles.terminalPopoutButton}
+                      type="button"
+                      onClick={() => {
+                        const popupUrl = new URL(window.location.href);
+                        popupUrl.searchParams.set("popout", "1");
+
+                        const popup = window.open(
+                          popupUrl.toString(),
+                          "_blank",
+                          [
+                            "popup=yes",
+                            "noopener",
+                            "noreferrer",
+                            "menubar=no",
+                            "toolbar=no",
+                            "location=no",
+                            "status=no",
+                            "scrollbars=yes",
+                            "resizable=yes",
+                            "left=0",
+                            "top=0",
+                            `width=${window.screen.availWidth}`,
+                            `height=${window.screen.availHeight}`,
+                          ].join(","),
+                        );
+
+                        popup?.focus();
+
+                        try {
+                          popup?.moveTo(0, 0);
+                          popup?.resizeTo(
+                            window.screen.availWidth,
+                            window.screen.availHeight,
+                          );
+                        } catch {
+                          // Ignore browser restrictions on popup positioning and sizing.
+                        }
+                      }}
+                    >
+                      <PopOutIcon />
+                      <span>Pop Out</span>
+                    </button>
+                  </div>
                 </div>
               ) : null}
-            </div>
-            <div ref={containerRef} className={styles.terminalViewport} />
-            <div className={styles.terminalFooterBar}>
-              <span
-                className={`${styles.terminalFooterStatus} ${
-                  connectionState === "connected"
-                    ? styles.terminalFooterStatusConnected
-                    : connectionState === "error"
-                      ? styles.terminalFooterStatusError
-                      : styles.terminalFooterStatusPending
-                }`}
-              >
-                {connectionLabel}
-              </span>
+
+              <div className={styles.terminalShellViewportFrame}>
+                <div
+                  className={`${styles.terminalShellCard} ${
+                    isPopout ? styles.terminalShellCardPopout : ""
+                  }`}
+                  onPointerDown={() => {
+                    terminalRef.current?.focus();
+                  }}
+                >
+                  <div className={styles.terminalShellBar}>
+                    <span className={styles.terminalPromptLabel}>{promptLabel}</span>
+                    {isPopout ? (
+                      <div className={styles.terminalLatencyBadge}>
+                        <LatencyIcon />
+                        <span>{getLatencyLabel(instance)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div ref={containerRef} className={styles.terminalViewport} />
+                  <div className={styles.terminalFooterBar}>
+                    <span
+                      className={`${styles.terminalFooterStatus} ${
+                        connectionState === "connected"
+                          ? styles.terminalFooterStatusConnected
+                          : connectionState === "error"
+                            ? styles.terminalFooterStatusError
+                            : styles.terminalFooterStatusPending
+                      }`}
+                    >
+                      {connectionLabel}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {error ? (
+                <p className={`${styles.error} ${styles.terminalInlineError}`}>
+                  {error} Refresh the page to reopen the terminal session.
+                </p>
+              ) : null}
             </div>
           </div>
-
-          {error ? (
-            <p className={`${styles.error} ${styles.terminalInlineError}`}>
-              {error} Refresh the page to reopen the terminal session.
-            </p>
-          ) : null}
         </div>
       </section>
     </div>

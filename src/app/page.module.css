@@ -555,24 +555,42 @@
   line-height: 24px;
 }
 
+.priceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .priceLine {
   display: inline-flex;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .priceValue {
   color: var(--foreground);
-  font-size: 34px;
-  line-height: 38px;
+  font-size: 25px;
+  line-height: 29px;
   letter-spacing: -0.04em;
+  font-weight: 700;
+  text-decoration: line-through;
+  text-decoration-thickness: 2.5px;
+  text-decoration-color: color-mix(in srgb, var(--foreground) 85%, transparent);
+}
+
+.priceHeadline {
+  color: var(--foreground);
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.03em;
   font-weight: 800;
 }
 
-.priceUnit {
+.priceNote {
   color: var(--foreground-muted);
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 11px;
+  line-height: 16px;
+  max-width: 240px;
 }
 
 .asideList {
@@ -594,6 +612,21 @@
   font-weight: 500;
 }
 
+.asideBenefitConnect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.asideBenefitCopy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
 .asideBenefitIcon {
   display: inline-flex;
   align-items: center;
@@ -611,31 +644,23 @@
   line-height: 24px;
 }
 
-.asideConnectBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .asideConnectCopy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .asideConnectEyebrow {
-  color: var(--foreground-subtle);
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
 }
 
 .asideConnectText {
   color: var(--foreground-muted);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 500;
 }
 
@@ -643,12 +668,12 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .connectIconWrap {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface-soft);

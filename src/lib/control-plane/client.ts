@@ -1,34 +1,76 @@
 "use client";
 
-import { getResolvedFirebaseUser } from "@/lib/firebase/client";
 import { getControlPlaneRequestError } from "@/lib/control-plane/shared";
 import type { ControlPlaneErrorPayload } from "@/lib/control-plane/types";
+import { FIREBASE_ID_TOKEN_COOKIE_NAME } from "@/lib/firebase/session";
 
-function getBrowserControlPlaneBaseUrl() {
+function isLoopbackHostname(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    hostname.endsWith(".localhost")
+  );
+}
+
+function getBrowserProxyOriginOverride(configuredBaseUrl: string) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const currentUrl = new URL(window.location.origin);
+  const configuredUrl = new URL(configuredBaseUrl);
+
+  if (
+    currentUrl.protocol === "https:" &&
+    isLoopbackHostname(currentUrl.hostname) &&
+    configuredUrl.protocol !== "https:"
+  ) {
+    return currentUrl.origin;
+  }
+
+  return null;
+}
+
+export function getBrowserControlPlaneBaseUrl() {
   const value = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL;
 
   if (!value) {
     throw new Error("Missing NEXT_PUBLIC_CONTROL_PLANE_URL in the web app environment.");
   }
 
-  return value.replace(/\/+$/, "");
+  const normalizedValue = value.replace(/\/+$/, "");
+
+  return getBrowserProxyOriginOverride(normalizedValue) ?? normalizedValue;
 }
 
-async function getBrowserAccessToken() {
-  const user = await getResolvedFirebaseUser();
-
-  if (!user) {
-    throw new Error("No active Firebase session exists.");
+function getBrowserAccessToken() {
+  if (typeof document === "undefined") {
+    return null;
   }
 
-  return user.getIdToken();
+  const encodedValue = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${FIREBASE_ID_TOKEN_COOKIE_NAME}=`))
+    ?.split("=")
+    .slice(1)
+    .join("=");
+
+  return encodedValue ? decodeURIComponent(encodedValue) : null;
 }
 
 export async function controlPlaneFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const accessToken = await getBrowserAccessToken();
+  const accessToken = getBrowserAccessToken();
+
+  if (!accessToken) {
+    throw new Error("No active authenticated session exists.");
+  }
+
   const response = await fetch(`${getBrowserControlPlaneBaseUrl()}${path}`, {
     ...init,
     headers: {

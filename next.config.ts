@@ -2,8 +2,10 @@ import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
-const firebaseProjectAuthHost =
-  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "hosthermesagent.firebaseapp.com";
+const controlPlaneOrigin =
+  process.env.CONTROL_PLANE_URL ??
+  process.env.NEXT_PUBLIC_CONTROL_PLANE_URL ??
+  "http://localhost:4000";
 
 const nextConfig: NextConfig = {
   ...(process.env.NEXT_DIST_DIR
@@ -14,14 +16,16 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        // Proxy Firebase's hosted auth helpers through the app origin for redirect-based sign-in.
-        source: "/__/auth/:path*",
-        destination: `https://${firebaseProjectAuthHost}/__/auth/:path*`,
+        source: "/api/:path*",
+        destination: `${controlPlaneOrigin}/api/:path*`,
       },
       {
-        // Keep Firebase init metadata on the same origin when using a reverse proxy in dev.
-        source: "/__/firebase/:path*",
-        destination: `https://${firebaseProjectAuthHost}/__/firebase/:path*`,
+        source: "/health",
+        destination: `${controlPlaneOrigin}/health`,
+      },
+      {
+        source: "/ws/:path*",
+        destination: `${controlPlaneOrigin}/ws/:path*`,
       },
     ];
   },

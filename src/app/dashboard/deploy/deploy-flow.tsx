@@ -315,83 +315,85 @@ export function DeployFlow({ initialInstance }: DeployFlowProps) {
       </header>
 
       <section className={styles.statusCanvas}>
-        <div className={styles.statusPanel}>
-          <div className={styles.statusIntro}>
-            <h1 className={styles.statusTitle}>HostHermesAgent Setup</h1>
-            <p className={styles.statusCopy}>
-              Please wait while we prepare your environment.
-            </p>
-          </div>
+        <div className={styles.statusLayout}>
+          <div className={styles.statusPanel}>
+            <div className={styles.statusIntro}>
+              <h1 className={styles.statusTitle}>HostHermesAgent Setup</h1>
+              <p className={styles.statusCopy}>
+                Please wait while we prepare your environment.
+              </p>
+            </div>
 
-          <div className={styles.statusStepper}>
-            {statusSteps.map((step, index) => {
-              const hasConnector = index < statusSteps.length - 1;
-              const connectorDone = step.state === "completed";
+            <div className={styles.statusStepper}>
+              {statusSteps.map((step, index) => {
+                const hasConnector = index < statusSteps.length - 1;
+                const connectorDone = step.state === "completed";
 
-              return (
-                <div key={step.key} className={styles.statusStep}>
-                  <div className={styles.statusMarkerColumn}>
-                    <div
-                      className={`${styles.statusMarker} ${
-                        step.state === "completed"
-                          ? styles.statusMarkerCompleted
-                          : step.state === "active"
-                            ? styles.statusMarkerActive
-                            : styles.statusMarkerPending
-                      }`}
-                    >
-                      <StatusStepIcon state={step.state} stepKey={step.key} />
-                    </div>
-                    {hasConnector ? (
+                return (
+                  <div key={step.key} className={styles.statusStep}>
+                    <div className={styles.statusMarkerColumn}>
                       <div
-                        className={`${styles.statusConnector} ${
-                          connectorDone
-                            ? styles.statusConnectorCompleted
-                            : styles.statusConnectorPending
-                        }`}
-                      />
-                    ) : null}
-                  </div>
-
-                  <div className={styles.statusStepCopy}>
-                    <p
-                      className={`${styles.statusStepLabel} ${
-                        step.state === "pending" ? styles.statusStepLabelPending : ""
-                      }`}
-                    >
-                      {step.label}
-                    </p>
-                    {step.description ? (
-                      <p
-                        className={`${styles.statusStepDescription} ${
+                        className={`${styles.statusMarker} ${
                           step.state === "completed"
-                            ? styles.statusStepDescriptionCompleted
-                            : ""
+                            ? styles.statusMarkerCompleted
+                            : step.state === "active"
+                              ? styles.statusMarkerActive
+                              : styles.statusMarkerPending
                         }`}
                       >
-                        {step.description}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                        <StatusStepIcon state={step.state} stepKey={step.key} />
+                      </div>
+                      {hasConnector ? (
+                        <div
+                          className={`${styles.statusConnector} ${
+                            connectorDone
+                              ? styles.statusConnectorCompleted
+                              : styles.statusConnectorPending
+                          }`}
+                        />
+                      ) : null}
+                    </div>
 
-          {error ? <p className={`${styles.error} ${styles.statusError}`}>{error}</p> : null}
-          {instanceNotice ? (
-            <p className={`${styles.note} ${styles.statusNotice}`}>{instanceNotice}</p>
-          ) : null}
-          {instance?.errorMessage ? (
-            <p className={`${styles.error} ${styles.statusError}`}>
-              {sanitizeUserFacingErrorMessage(instance.errorMessage)}
-            </p>
-          ) : null}
-          {isWorking && !instance ? (
-            <p className={`${styles.note} ${styles.statusNotice}`}>
-              Starting your Hermes environment now.
-            </p>
-          ) : null}
+                    <div className={styles.statusStepCopy}>
+                      <p
+                        className={`${styles.statusStepLabel} ${
+                          step.state === "pending" ? styles.statusStepLabelPending : ""
+                        }`}
+                      >
+                        {step.label}
+                      </p>
+                      {step.description ? (
+                        <p
+                          className={`${styles.statusStepDescription} ${
+                            step.state === "completed"
+                              ? styles.statusStepDescriptionCompleted
+                              : ""
+                          }`}
+                        >
+                          {step.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {error ? <p className={`${styles.error} ${styles.statusError}`}>{error}</p> : null}
+            {instanceNotice ? (
+              <p className={`${styles.note} ${styles.statusNotice}`}>{instanceNotice}</p>
+            ) : null}
+            {instance?.errorMessage ? (
+              <p className={`${styles.error} ${styles.statusError}`}>
+                {sanitizeUserFacingErrorMessage(instance.errorMessage)}
+              </p>
+            ) : null}
+            {isWorking && !instance ? (
+              <p className={`${styles.note} ${styles.statusNotice}`}>
+                Starting your Hermes environment now.
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
     </div>

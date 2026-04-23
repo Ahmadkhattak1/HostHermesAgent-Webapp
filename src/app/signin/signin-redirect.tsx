@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "@/app/console.module.css";
+import { clearFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
 import {
-  clearPendingGoogleSignInPath,
   continueToProtectedPathWithGoogleSignIn,
   getGoogleSignInErrorMessage,
-  readPendingGoogleSignInPath,
   resolveExistingGoogleSession,
-  shouldPreferGooglePopupSignIn,
 } from "@/lib/firebase/google-sign-in";
-import { clearFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
 import { logClientError, logClientInfo } from "@/lib/logging/client";
 
 type SignInRedirectContentProps = {
@@ -19,89 +16,44 @@ type SignInRedirectContentProps = {
 };
 
 export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) {
-  const initRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(true);
-  const [requiresUserAction, setRequiresUserAction] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    if (initRef.current) {
-      return;
-    }
-
-    initRef.current = true;
     let cancelled = false;
 
-    queueMicrotask(() => {
-      void (async () => {
-        try {
-          const restoredUser = await resolveExistingGoogleSession();
+    void (async () => {
+      try {
+        setIsBusy(true);
+        const restoredUser = await resolveExistingGoogleSession();
 
-          if (cancelled) {
-            return;
-          }
-
-          if (restoredUser) {
-            logClientInfo("auth", "signin.restored_existing_session", {
-              nextPath,
-              userId: restoredUser.uid,
-            });
-            window.location.replace(nextPath);
-            return;
-          }
-
-          if (shouldPreferGooglePopupSignIn()) {
-            clearPendingGoogleSignInPath();
-            logClientInfo("auth", "signin.awaiting_popup_user_action", {
-              nextPath,
-            });
-            setRequiresUserAction(true);
-            setIsBusy(false);
-            return;
-          }
-
-          if (readPendingGoogleSignInPath()) {
-            const restoreError = new Error(
-              "Google sign-in returned without restoring a Firebase session.",
-            );
-
-            logClientError(
-              "auth",
-              "signin.redirect_restore_missing_user",
-              restoreError,
-              {
-                nextPath,
-              },
-            );
-            setError(getGoogleSignInErrorMessage(restoreError));
-            setIsBusy(false);
-            return;
-          }
-
-          logClientInfo("auth", "signin.auto_starting_google", {
-            nextPath,
-          });
-          await continueToProtectedPathWithGoogleSignIn(nextPath, "replace", {
-            skipExistingSessionResolution: true,
-          });
-        } catch (caughtError: unknown) {
-          if (cancelled) {
-            return;
-          }
-
-          clearFirebaseIdTokenCookie();
-          logClientError("auth", "signin.auto_start_failed", caughtError, {
-            nextPath,
-          });
-          setError(getGoogleSignInErrorMessage(caughtError));
-          setRequiresUserAction(true);
-        } finally {
-          if (!cancelled) {
-            setIsBusy(false);
-          }
+        if (cancelled) {
+          return;
         }
-      })();
-    });
+
+        if (restoredUser) {
+          logClientInfo("auth", "signin.restored_existing_session", {
+            nextPath,
+            userId: restoredUser.uid,
+          });
+          window.location.replace(nextPath);
+        }
+      } catch (caughtError: unknown) {
+        if (cancelled) {
+          return;
+        }
+
+        clearFirebaseIdTokenCookie();
+        logClientError("auth", "signin.restore_failed", caughtError, {
+          nextPath,
+        });
+        setError(getGoogleSignInErrorMessage(caughtError));
+      } finally {
+        if (!cancelled) {
+          setIsBusy(false);
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -120,15 +72,9 @@ export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) 
         nextPath,
       });
       setError(getGoogleSignInErrorMessage(caughtError));
-      setRequiresUserAction(true);
       setIsBusy(false);
     }
   }
-
-  const title = requiresUserAction ? "Sign in to continue" : "Continuing";
-  const copy = requiresUserAction
-    ? "Continue with Google to access your dashboard."
-    : "Please wait while we verify your access.";
 
   return (
     <main className={`${styles.screen} ${styles.subscriptionScreen}`}>
@@ -142,31 +88,31 @@ export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) 
             </div>
           ) : null}
           <div className={styles.redirectTextBlock}>
-            <h1 className={styles.redirectTitle}>{title}</h1>
-            <p className={styles.redirectCopy}>{copy}</p>
+            <h1 className={styles.redirectTitle}>
+              {error ? "Sign in to continue" : "Continue with Google"}
+            </h1>
+            <p className={styles.redirectCopy}>
+              {error
+                ? "Continue with Google to access your Host Hermes account."
+                : "Use the Google popup to access your Host Hermes account."}
+            </p>
           </div>
-          {error ? (
-            <>
-              <p className={`${styles.error} ${styles.redirectError}`}>{error}</p>
-            </>
-          ) : null}
-          {!isBusy || error ? (
-            <div className={styles.redirectActions}>
-              <button
-                className={styles.redirectPrimaryLink}
-                type="button"
-                onClick={() => {
-                  void handleContinueWithGoogle();
-                }}
-                disabled={isBusy}
-              >
-                Continue with Google
-              </button>
-              <Link className={styles.redirectSecondaryLink} href="/">
-                Return home
-              </Link>
-            </div>
-          ) : null}
+          {error ? <p className={`${styles.error} ${styles.redirectError}`}>{error}</p> : null}
+          <div className={styles.redirectActions}>
+            <button
+              className={styles.redirectPrimaryLink}
+              type="button"
+              onClick={() => {
+                void handleContinueWithGoogle();
+              }}
+              disabled={isBusy}
+            >
+              {isBusy ? "Opening Google..." : "Continue with Google"}
+            </button>
+            <Link className={styles.redirectSecondaryLink} href="/">
+              Return home
+            </Link>
+          </div>
         </div>
       </div>
     </main>
