@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClientLogBridge } from "@/app/client-log-bridge";
 import { FirebaseAuthBridge } from "@/app/firebase-auth-bridge";
@@ -36,6 +37,7 @@ export default function RootLayout({
         <ClientLogBridge />
         <FirebaseAuthBridge />
         {children}
+        <Analytics />
       </body>
     </html>
   );

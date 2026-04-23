@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 
-const workspaceRoot = fileURLToPath(new URL("..", import.meta.url));
+const appRoot = fileURLToPath(new URL(".", import.meta.url));
 const controlPlaneOrigin =
   process.env.CONTROL_PLANE_URL ??
   process.env.NEXT_PUBLIC_CONTROL_PLANE_URL ??
@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         distDir: process.env.NEXT_DIST_DIR,
       }
     : {}),
-  outputFileTracingRoot: workspaceRoot,
+  outputFileTracingRoot: appRoot,
   async rewrites() {
     return [
       {
@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     ];
   },
   turbopack: {
-    root: workspaceRoot,
+    root: appRoot,
   },
 };
 
