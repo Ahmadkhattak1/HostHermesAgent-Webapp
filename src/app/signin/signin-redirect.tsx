@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "@/app/console.module.css";
-import { clearFirebaseIdTokenCookie } from "@/lib/firebase/client-session";
+import {
+  clearFirebaseIdTokenCookie,
+  hasFirebaseIdTokenCookie,
+} from "@/lib/firebase/client-session";
 import {
   continueToProtectedPathWithGoogleSignIn,
   getGoogleSignInErrorMessage,
@@ -25,6 +28,15 @@ export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) 
     void (async () => {
       try {
         setIsBusy(true);
+
+        if (hasFirebaseIdTokenCookie()) {
+          logClientInfo("auth", "signin.cookie_short_circuit", {
+            nextPath,
+          });
+          window.location.replace(nextPath);
+          return;
+        }
+
         const restoredUser = await resolveExistingGoogleSession();
 
         if (cancelled) {
@@ -37,7 +49,16 @@ export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) 
             userId: restoredUser.uid,
           });
           window.location.replace(nextPath);
+          return;
         }
+
+        await continueToProtectedPathWithGoogleSignIn(
+          nextPath,
+          "replace",
+          {
+            skipExistingSessionResolution: true,
+          },
+        );
       } catch (caughtError: unknown) {
         if (cancelled) {
           return;
@@ -74,6 +95,10 @@ export function SignInRedirectContent({ nextPath }: SignInRedirectContentProps) 
       setError(getGoogleSignInErrorMessage(caughtError));
       setIsBusy(false);
     }
+  }
+
+  if (isBusy && !error) {
+    return null;
   }
 
   return (

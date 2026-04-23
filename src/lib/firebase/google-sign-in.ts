@@ -49,6 +49,12 @@ function getFirebaseAuthErrorCode(error: unknown) {
   return null;
 }
 
+async function flushClientSessionCookie() {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 50);
+  });
+}
+
 export function getGoogleSignInErrorMessage(error: unknown) {
   const code = getFirebaseAuthErrorCode(error);
 
@@ -71,6 +77,7 @@ export function getGoogleSignInErrorMessage(error: unknown) {
 export async function syncFirebaseSession(user: User) {
   const token = await user.getIdToken();
   writeFirebaseIdTokenCookie(token);
+  await flushClientSessionCookie();
   logClientInfo("auth", "session.synced_from_user", {
     ...getFirebaseRuntimeDiagnostics(),
     hasFirebaseCookie: hasFirebaseIdTokenCookie(),

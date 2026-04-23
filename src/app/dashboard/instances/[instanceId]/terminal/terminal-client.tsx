@@ -906,14 +906,16 @@ export function TerminalClient({
           : "Sent the Hermes installer command to the current machine shell.",
       );
     } catch (caughtError: unknown) {
+      const fallbackMessage =
+        action === "open"
+          ? "Could not open Hermes Agent in the current shell."
+          : action === "update"
+            ? "Could not start the Hermes Agent update."
+            : "Could not reset the Hermes Agent installation.";
+
       setError(
         sanitizeUserFacingErrorMessage(
-          caughtError,
-          action === "open"
-            ? "Could not open Hermes Agent in the current shell."
-            : action === "update"
-            ? "Could not start the Hermes Agent update."
-            : "Could not reset the Hermes Agent installation.",
+          caughtError instanceof Error ? caughtError.message : fallbackMessage,
         ),
       );
     } finally {
