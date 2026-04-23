@@ -1,37 +1,55 @@
 import { NextResponse } from "next/server";
 import {
-  AGENT_DISCOVERY_LINKS,
   buildAbsoluteUrl,
   buildAgentDiscoveryLinkHeader,
 } from "@/lib/site-config";
+import {
+  getApiCatalogUrl,
+  getApiDocumentationUrl,
+  getOpenApiDocumentUrl,
+  getProtectedResourceIdentifier,
+} from "@/lib/discovery";
 
-const contentType = "application/json; charset=utf-8";
+const contentType =
+  'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"';
 
 function getCatalogDocument() {
   return {
-    title: "Host Hermes Agent API Catalog",
-    publisher: {
-      name: "Host Hermes Agent",
-      url: buildAbsoluteUrl("/"),
-    },
-    links: AGENT_DISCOVERY_LINKS.map(({ path, rel }) => ({
-      href: buildAbsoluteUrl(path),
-      rel,
-    })),
-    apis: [
+    linkset: [
       {
-        name: "Control Plane API",
-        baseUrl: buildAbsoluteUrl("/api/"),
-        docs: buildAbsoluteUrl("/docs/api"),
-        health: buildAbsoluteUrl("/health"),
-        websocket: buildAbsoluteUrl("/ws/"),
+        anchor: getProtectedResourceIdentifier(),
+        "service-desc": [
+          {
+            href: getOpenApiDocumentUrl(),
+            type: "application/vnd.oai.openapi+json;version=3.1",
+          },
+        ],
+        "service-doc": [
+          {
+            href: getApiDocumentationUrl(),
+            type: "text/html",
+          },
+        ],
+        status: [
+          {
+            href: buildAbsoluteUrl("/health"),
+          },
+        ],
+      },
+      {
+        anchor: getApiCatalogUrl(),
+        item: [
+          {
+            href: getProtectedResourceIdentifier(),
+          },
+        ],
       },
     ],
   };
 }
 
 export function GET() {
-  return NextResponse.json(getCatalogDocument(), {
+  return new NextResponse(JSON.stringify(getCatalogDocument(), null, 2), {
     headers: {
       Link: buildAgentDiscoveryLinkHeader(),
       "Content-Type": contentType,

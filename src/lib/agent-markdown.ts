@@ -1,3 +1,9 @@
+import {
+  getAgentSkillsIndexUrl,
+  getApiCatalogUrl,
+  getOpenApiDocumentUrl,
+  getProtectedResourceIdentifier,
+} from "@/lib/discovery";
 import { buildAbsoluteUrl } from "@/lib/site-config";
 
 type MarkdownEndpoint = {
@@ -86,7 +92,9 @@ Host Hermes Agent helps teams run Hermes Agent as an always-available cloud depl
 - Sign in: ${buildAbsoluteUrl("/signin")}
 - Dashboard: ${buildAbsoluteUrl("/dashboard")}
 - API documentation: ${buildAbsoluteUrl("/docs/api")}
-- API catalog: ${buildAbsoluteUrl("/.well-known/api-catalog")}
+- API catalog: ${getApiCatalogUrl()}
+- OpenAPI document: ${getOpenApiDocumentUrl()}
+- Agent skills index: ${getAgentSkillsIndexUrl()}
 - GitHub: https://github.com/NousResearch/hermes-agent
 `;
 }
@@ -106,10 +114,15 @@ canonical: ${buildAbsoluteUrl("/docs/api")}
 
 This site exposes a small set of public entrypoints that route traffic to the Host Hermes Agent control plane.
 
+Agents should prefer the browser UI and WebMCP tools for sign-in, trial, and checkout flows. The protected API is intended for first-party webapp traffic.
+
 ## Discovery
 
-- API catalog: ${buildAbsoluteUrl("/.well-known/api-catalog")}
+- API catalog: ${getApiCatalogUrl()}
+- OpenAPI: ${getOpenApiDocumentUrl()}
+- Agent skills index: ${getAgentSkillsIndexUrl()}
 - Base site URL: ${buildAbsoluteUrl("/")}
+- Protected API resource: ${getProtectedResourceIdentifier()}
 
 ## Available entrypoints
 

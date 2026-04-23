@@ -2,6 +2,23 @@ import type { MetadataRoute } from "next";
 
 const DEFAULT_SITE_URL = "https://hosthermesagent.com";
 
+export const SITE_NAME = "Host Hermes Agent";
+export const SITE_DESCRIPTION =
+  "Host Hermes Agent on a VPS with fast deployment, private infrastructure, reliable uptime, and a cleaner managed experience for self-hosted AI agents.";
+export const HOME_PAGE_TITLE =
+  "Host Hermes Agent on a VPS | Private Hermes Agent Hosting";
+export const HOME_PAGE_DESCRIPTION =
+  "Deploy Hermes Agent on a VPS in minutes with managed hosting built for self-hosted AI agents, private AI agent workflows, and teams looking for an OpenClaw alternative.";
+export const SITE_KEYWORDS = [
+  "host hermes agent",
+  "hermes agent vps",
+  "hermes agent hosting",
+  "deploy hermes agent on a vps",
+  "self-hosted ai agent",
+  "private ai agent",
+  "openclaw alternative",
+] as const;
+
 type SitemapEntry = {
   changeFrequency: NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
   path: string;
@@ -23,7 +40,6 @@ export const SITEMAP_ENTRIES: SitemapEntry[] = [
 
 export const ROBOTS_ALLOW_PATHS = [
   "/",
-  "/signin",
   "/docs/api",
   "/.well-known/",
 ] as const;

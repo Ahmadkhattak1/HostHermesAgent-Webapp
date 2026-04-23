@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { ProtectedRouteLink } from "@/components/protected-route-link";
 import { getAuthenticatedSession } from "@/lib/control-plane/server";
 import { buildSubscriptionPath } from "@/lib/routing";
+import {
+  HOME_PAGE_DESCRIPTION,
+  HOME_PAGE_TITLE,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  buildAbsoluteUrl,
+} from "@/lib/site-config";
 import styles from "./page.module.css";
 
 type Capability = {
@@ -32,6 +40,11 @@ type SidebarBenefit = {
 type ConnectApp = {
   name: string;
   src: string;
+};
+
+type SeoQuestion = {
+  answer: string;
+  question: string;
 };
 
 const coreCapabilities: Capability[] = [
@@ -187,6 +200,52 @@ const connectApps: ConnectApp[] = [
     src: "/assets/figma/aside-app-1.png",
   },
 ];
+
+const seoQuestions: SeoQuestion[] = [
+  {
+    question: "What is Host Hermes Agent?",
+    answer:
+      "Host Hermes Agent is a managed way to run Hermes Agent on private VPS infrastructure without having to stitch together the full deployment, uptime, and access setup yourself.",
+  },
+  {
+    question: "Can I deploy Hermes Agent on a VPS?",
+    answer:
+      "Yes. The platform is built around deploying Hermes Agent on a VPS so your agent stays online, isolated, and accessible for long-running workflows.",
+  },
+  {
+    question: "Is this useful for a self-hosted private AI agent?",
+    answer:
+      "Yes. It is designed for teams and individuals who want a self-hosted AI agent with more privacy, persistent uptime, and less operational friction than a local-only setup.",
+  },
+  {
+    question: "Is Host Hermes Agent an OpenClaw alternative?",
+    answer:
+      "If you are evaluating an OpenClaw alternative, Host Hermes Agent gives you a straightforward path to run Hermes Agent with managed hosting, VPS deployment, and a cleaner onboarding flow.",
+  },
+];
+
+export const metadata: Metadata = {
+  title: {
+    absolute: HOME_PAGE_TITLE,
+  },
+  description: HOME_PAGE_DESCRIPTION,
+  keywords: [...SITE_KEYWORDS],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: HOME_PAGE_TITLE,
+    description: HOME_PAGE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: HOME_PAGE_TITLE,
+    description: HOME_PAGE_DESCRIPTION,
+  },
+};
 
 function ArrowRightIcon() {
   return (
@@ -358,6 +417,48 @@ export default async function Home() {
   const session = await getAuthenticatedSession();
   const isSignedIn = session !== null;
   const currentYear = new Date().getFullYear();
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: SITE_NAME,
+        url: buildAbsoluteUrl("/"),
+        description: HOME_PAGE_DESCRIPTION,
+      },
+      {
+        "@type": "Service",
+        name: SITE_NAME,
+        serviceType: "Hermes Agent VPS hosting",
+        url: buildAbsoluteUrl("/"),
+        description: HOME_PAGE_DESCRIPTION,
+        areaServed: "Worldwide",
+        provider: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: buildAbsoluteUrl("/"),
+        },
+        offers: {
+          "@type": "Offer",
+          price: "19.99",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+          url: buildAbsoluteUrl("/"),
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: seoQuestions.map(({ question, answer }) => ({
+          "@type": "Question",
+          name: question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: answer,
+          },
+        })),
+      },
+    ],
+  };
   const primaryCtaHref = isSignedIn ? dashboardPath : startTrialPath;
   const headerLinkLabel = isSignedIn ? "Dashboard" : "Log In";
   const headerButtonLabel = isSignedIn ? "Go to Dashboard" : "3-Day Trial";
@@ -369,6 +470,10 @@ export default async function Home() {
 
   return (
     <div className={styles.page} id="top">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <a className={styles.brand} href="#top" aria-label="Host Hermes Agent">
@@ -424,30 +529,33 @@ export default async function Home() {
             </div>
 
             <div className={styles.heroHeadingWrap}>
-              <h1 className={styles.heroTitle}>Hermes Agent Hosting</h1>
+              <h1 className={styles.heroTitle}>Host Hermes Agent on a VPS</h1>
             </div>
 
             <div className={styles.heroCopyBlock}>
               <p className={styles.heroLead}>
-                Deploy Hermes Agent in the cloud with fast setup and a better
-                user experience.
+                Deploy Hermes Agent on a VPS with fast setup, private
+                infrastructure, and a cleaner managed user experience.
               </p>
               <p className={styles.heroDescription}>
-                Run Hermes Agent in the cloud with fast setup, reliable uptime,
-                and a cleaner experience from day one. Launch your own
-                always-available AI agent without dealing with the usual setup
-                friction.
+                Run Hermes Agent as a self-hosted AI agent with reliable uptime,
+                isolated infrastructure, and less deployment friction. Launch a
+                private AI agent that stays available for research, automations,
+                technical workflows, and long-running tasks.
               </p>
             </div>
           </section>
 
           <section className={`${styles.section} ${styles.sectionBordered}`}>
-            <h2 className={styles.sectionTitle}>A self-improving AI agent</h2>
+            <h2 className={styles.sectionTitle}>
+              Hermes Agent hosting for private, always-on workflows
+            </h2>
             <p className={styles.sectionCopy}>
               Designed to operate autonomously, Hermes handles complex tasks by
               leveraging persistent memory, dynamic tool selection, and
               iterative self-correction. It&apos;s built for continuous execution
-              rather than single-shot prompts.
+              rather than single-shot prompts. Hosting it on a VPS keeps that
+              workflow available beyond a single laptop session.
             </p>
 
             <div className={styles.capabilityList}>
@@ -488,6 +596,26 @@ export default async function Home() {
                   <div className={styles.cardCopy}>
                     <h3>{useCase.title}</h3>
                     <p>{useCase.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Why deploy Hermes Agent on a VPS?</h2>
+            <p className={styles.sectionCopy}>
+              VPS deployment gives Hermes Agent a stable home for persistent memory,
+              background tasks, remote access, and cleaner separation from your local
+              machine. It is a practical fit for anyone evaluating Hermes Agent
+              hosting, a self-hosted AI agent stack, or a more private AI agent setup.
+            </p>
+            <div className={styles.useCaseGrid}>
+              {seoQuestions.map((item) => (
+                <article className={styles.surfaceCard} key={item.question}>
+                  <div className={styles.cardCopy}>
+                    <h3>{item.question}</h3>
+                    <p>{item.answer}</p>
                   </div>
                 </article>
               ))}
