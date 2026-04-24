@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { ProtectedRouteLink } from "@/components/protected-route-link";
 import { getAuthenticatedSession } from "@/lib/control-plane/server";
 import { buildSubscriptionPath } from "@/lib/routing";
@@ -46,6 +47,10 @@ type SeoQuestion = {
   answer: string;
   question: string;
 };
+
+type FooterLink =
+  | { external?: false; href: string; label: string }
+  | { external: true; href: string; label: string };
 
 const coreCapabilities: Capability[] = [
   {
@@ -174,10 +179,10 @@ const sidebarBenefits: SidebarBenefit[] = [
   },
 ];
 
-const footerLinks = [
-  { href: "#", label: "Privacy" },
-  { href: "#", label: "Terms" },
-  { href: "https://github.com/NousResearch/hermes-agent", label: "GitHub" },
+const footerLinks: FooterLink[] = [
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+  { external: true, href: "https://github.com/NousResearch/hermes-agent", label: "GitHub" },
 ];
 const dashboardPath = "/dashboard";
 const startTrialPath = buildSubscriptionPath(dashboardPath);
@@ -742,17 +747,23 @@ export default async function Home() {
           <div className={styles.footerInner}>
             <p className={styles.footerCopy}>&copy; {currentYear} HostHermesAgent.</p>
             <div className={styles.footerLinks}>
-            {footerLinks.map((link) => (
-              <a
-                className={styles.footerLink}
-                href={link.href}
-                key={link.label}
-                rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-                target={link.href.startsWith("http") ? "_blank" : undefined}
-              >
-                {link.label}
-              </a>
-            ))}
+            {footerLinks.map((link) =>
+              link.external ? (
+                <a
+                  className={styles.footerLink}
+                  href={link.href}
+                  key={link.label}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link className={styles.footerLink} href={link.href} key={link.label}>
+                  {link.label}
+                </Link>
+              ),
+            )}
           </div>
         </div>
       </footer>

@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 const DEFAULT_SITE_URL = "https://hosthermesagent.com";
 
 export const SITE_NAME = "Host Hermes Agent";
+export const SUPPORT_EMAIL = "support@hosthermesagent.com";
 export const SITE_DESCRIPTION =
   "Host Hermes Agent on a VPS with fast deployment, private infrastructure, reliable uptime, and a cleaner managed experience for self-hosted AI agents.";
 export const HOME_PAGE_TITLE =
@@ -30,6 +31,16 @@ export const SITEMAP_ENTRIES: SitemapEntry[] = [
     path: "/",
     changeFrequency: "daily",
     priority: 1,
+  },
+  {
+    path: "/privacy",
+    changeFrequency: "monthly",
+    priority: 0.2,
+  },
+  {
+    path: "/terms",
+    changeFrequency: "monthly",
+    priority: 0.2,
   },
   {
     path: "/docs/api",

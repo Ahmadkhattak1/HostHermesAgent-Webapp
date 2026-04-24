@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "@/app/console.module.css";
 import { useAnimatedPresence } from "@/components/use-animated-presence";
-
-const SUPPORT_EMAIL = "Support@hosthermesagent.com";
+import { SUPPORT_EMAIL } from "@/lib/site-config";
 
 type SupportContactButtonProps = {
   buttonClassName: string;
