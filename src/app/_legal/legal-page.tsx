@@ -11,7 +11,7 @@ type LegalSection = {
 };
 
 type LegalPageProps = {
-  description: string;
+  description?: string;
   effectiveDate: string;
   eyebrow: string;
   sections: readonly LegalSection[];
@@ -77,32 +77,22 @@ export function LegalPage({
       </header>
 
       <main className={styles.main}>
-        <section className={styles.hero}>
-          <div className={styles.heroCard}>
+        <div className={styles.document}>
+          <header className={styles.documentHeader}>
             <p className={styles.eyebrow}>{eyebrow}</p>
             <h1 className={styles.title}>{title}</h1>
-            <p className={styles.intro}>{description}</p>
-            <div className={styles.metaRow}>
-              <span className={styles.metaBadge}>Effective {effectiveDate}</span>
-              <span className={styles.metaText}>Written for the hosted service we run today.</span>
-            </div>
-          </div>
-
-          <aside className={styles.contactCard}>
-            <h2 className={styles.contactTitle}>Privacy-first support</h2>
-            <p className={styles.contactBody}>
-              If you have a question about data handling, account deletion, billing records, or
-              these terms, contact us directly.
+            {description ? <p className={styles.intro}>{description}</p> : null}
+            <p className={styles.metaText}>Effective {effectiveDate}</p>
+            <p className={styles.contactLine}>
+              Questions about these terms or our privacy practices:{" "}
+              <a className={styles.contactLink} href={`mailto:${SUPPORT_EMAIL}`}>
+                {SUPPORT_EMAIL}
+              </a>
             </p>
-            <a className={styles.contactLink} href={`mailto:${SUPPORT_EMAIL}`}>
-              {SUPPORT_EMAIL}
-            </a>
-          </aside>
-        </section>
+          </header>
 
-        <div className={styles.content}>
           {sections.map((section) => (
-            <section className={styles.sectionCard} key={section.title}>
+            <section className={styles.section} key={section.title}>
               <h2 className={styles.sectionTitle}>{section.title}</h2>
               {section.paragraphs?.map((paragraph) => (
                 <p className={styles.paragraph} key={paragraph}>

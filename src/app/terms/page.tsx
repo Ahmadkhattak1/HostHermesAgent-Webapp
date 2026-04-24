@@ -114,7 +114,6 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <LegalPage
-      description="These terms explain the rules for using the hosted service, how subscriptions work, what responsibilities stay with the customer, and the limits that apply to the platform."
       effectiveDate={effectiveDate}
       eyebrow="Terms of Service"
       sections={sections}
