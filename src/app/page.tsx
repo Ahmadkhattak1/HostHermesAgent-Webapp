@@ -12,7 +12,10 @@ export default function Home() {
         priority
         unoptimized
       />
-      <p>Go to Clawpilot.app for hosting hermes agent</p>
+      <p>
+        We merged with <a href="https://clawpilot.app">Clawpilot.app</a>. You
+        can go there to host your agent.
+      </p>
     </main>
   );
 }
