@@ -1,0 +1,11 @@
+
+> host-hermes-agent-webapp@0.1.0 dev
+> next dev --hostname localhost --port 3001
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://localhost:3001
+✓ Ready in 966ms
+
+ GET / 200 in 1596ms (next.js: 1344ms, application-code: 252ms)
+ GET / 200 in 71ms (next.js: 8ms, application-code: 63ms)
