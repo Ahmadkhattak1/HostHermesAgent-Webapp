@@ -1,0 +1,9 @@
+# Host Hermes Agent
+
+Host Hermes Agent has merged with Clawpilot.app.
+
+Clawpilot.app is the current destination for managed Hermes Agent hosting and AI agent hosting.
+
+Primary URL: https://clawpilot.app
+Legacy site: https://hosthermesagent.com
+Topic: Hermes Agent hosting, managed Hermes Agent, AI agent hosting
